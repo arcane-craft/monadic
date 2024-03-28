@@ -21,9 +21,9 @@ func Apply(f func() error) IO[monadic.Void] {
 		v: lazy.New(func() either.Either[monadic.Void, error] {
 			err := f()
 			if err != nil {
-				return lazy.Eval(result.Fail[monadic.Void](lazy.Const(err)))
+				return result.Fail[monadic.Void](lazy.Const(err))
 			}
-			return lazy.Eval(result.Ok(lazy.Const(monadic.Void{})))
+			return result.Ok(lazy.Const(monadic.Void{}))
 		}),
 	}
 }
@@ -49,9 +49,9 @@ func Apply1P[P any](f func(P) error, p lazy.Value[P]) IO[monadic.Void] {
 		v: lazy.New(func() either.Either[monadic.Void, error] {
 			err := f(lazy.Eval(p))
 			if err != nil {
-				return lazy.Eval(result.Fail[monadic.Void](lazy.Const(err)))
+				return result.Fail[monadic.Void](lazy.Const(err))
 			}
-			return lazy.Eval(result.Ok(lazy.Const(monadic.Void{})))
+			return result.Ok(lazy.Const(monadic.Void{}))
 		}),
 	}
 }
@@ -77,9 +77,9 @@ func Apply2P[P1, P2 any](f func(P1, P2) error, p1 lazy.Value[P1], p2 lazy.Value[
 		v: lazy.New(func() either.Either[monadic.Void, error] {
 			err := f(lazy.Eval(p1), lazy.Eval(p2))
 			if err != nil {
-				return lazy.Eval(result.Fail[monadic.Void](lazy.Const(err)))
+				return result.Fail[monadic.Void](lazy.Const(err))
 			}
-			return lazy.Eval(result.Ok(lazy.Const(monadic.Void{})))
+			return result.Ok(lazy.Const(monadic.Void{}))
 		}),
 	}
 }
@@ -105,9 +105,9 @@ func Apply3P[P1, P2, P3 any](f func(P1, P2, P3) error, p1 lazy.Value[P1], p2 laz
 		v: lazy.New(func() either.Either[monadic.Void, error] {
 			err := f(lazy.Eval(p1), lazy.Eval(p2), lazy.Eval(p3))
 			if err != nil {
-				return lazy.Eval(result.Fail[monadic.Void](lazy.Const(err)))
+				return result.Fail[monadic.Void](lazy.Const(err))
 			}
-			return lazy.Eval(result.Ok(lazy.Const(monadic.Void{})))
+			return result.Ok(lazy.Const(monadic.Void{}))
 		}),
 	}
 }
@@ -133,9 +133,9 @@ func Apply4P[P1, P2, P3, P4 any](f func(P1, P2, P3, P4) error, p1 lazy.Value[P1]
 		v: lazy.New(func() either.Either[monadic.Void, error] {
 			err := f(lazy.Eval(p1), lazy.Eval(p2), lazy.Eval(p3), lazy.Eval(p4))
 			if err != nil {
-				return lazy.Eval(result.Fail[monadic.Void](lazy.Const(err)))
+				return result.Fail[monadic.Void](lazy.Const(err))
 			}
-			return lazy.Eval(result.Ok(lazy.Const(monadic.Void{})))
+			return result.Ok(lazy.Const(monadic.Void{}))
 		}),
 	}
 }
@@ -161,9 +161,9 @@ func Apply5P[P1, P2, P3, P4, P5 any](f func(P1, P2, P3, P4, P5) error, p1 lazy.V
 		v: lazy.New(func() either.Either[monadic.Void, error] {
 			err := f(lazy.Eval(p1), lazy.Eval(p2), lazy.Eval(p3), lazy.Eval(p4), lazy.Eval(p5))
 			if err != nil {
-				return lazy.Eval(result.Fail[monadic.Void](lazy.Const(err)))
+				return result.Fail[monadic.Void](lazy.Const(err))
 			}
-			return lazy.Eval(result.Ok(lazy.Const(monadic.Void{})))
+			return result.Ok(lazy.Const(monadic.Void{}))
 		}),
 	}
 }
@@ -189,9 +189,9 @@ func Apply1R[R any](f func() (R, error)) IO[R] {
 		v: lazy.New(func() either.Either[R, error] {
 			r, err := f()
 			if err != nil {
-				return lazy.Eval(result.Fail[R](lazy.Const(err)))
+				return result.Fail[R](lazy.Const(err))
 			}
-			return lazy.Eval(result.Ok(lazy.Const(r)))
+			return result.Ok(lazy.Const(r))
 		}),
 	}
 }
@@ -217,9 +217,9 @@ func Apply1P1R[P, R any](f func(P) (R, error), p lazy.Value[P]) IO[R] {
 		v: lazy.New(func() either.Either[R, error] {
 			r, err := f(lazy.Eval(p))
 			if err != nil {
-				return lazy.Eval(result.Fail[R](lazy.Const(err)))
+				return result.Fail[R](lazy.Const(err))
 			}
-			return lazy.Eval(result.Ok(lazy.Const(r)))
+			return result.Ok(lazy.Const(r))
 		}),
 	}
 }
@@ -245,9 +245,9 @@ func Apply2P1R[P1, P2, R any](f func(P1, P2) (R, error), p1 lazy.Value[P1], p2 l
 		v: lazy.New(func() either.Either[R, error] {
 			r, err := f(lazy.Eval(p1), lazy.Eval(p2))
 			if err != nil {
-				return lazy.Eval(result.Fail[R](lazy.Const(err)))
+				return result.Fail[R](lazy.Const(err))
 			}
-			return lazy.Eval(result.Ok(lazy.Const(r)))
+			return result.Ok(lazy.Const(r))
 		}),
 	}
 }
@@ -273,9 +273,9 @@ func Apply3P1R[P1, P2, P3, R any](f func(P1, P2, P3) (R, error), p1 lazy.Value[P
 		v: lazy.New(func() either.Either[R, error] {
 			r, err := f(lazy.Eval(p1), lazy.Eval(p2), lazy.Eval(p3))
 			if err != nil {
-				return lazy.Eval(result.Fail[R](lazy.Const(err)))
+				return result.Fail[R](lazy.Const(err))
 			}
-			return lazy.Eval(result.Ok(lazy.Const(r)))
+			return result.Ok(lazy.Const(r))
 		}),
 	}
 }
@@ -301,9 +301,9 @@ func Apply4P1R[P1, P2, P3, P4, R any](f func(P1, P2, P3, P4) (R, error), p1 lazy
 		v: lazy.New(func() either.Either[R, error] {
 			r, err := f(lazy.Eval(p1), lazy.Eval(p2), lazy.Eval(p3), lazy.Eval(p4))
 			if err != nil {
-				return lazy.Eval(result.Fail[R](lazy.Const(err)))
+				return result.Fail[R](lazy.Const(err))
 			}
-			return lazy.Eval(result.Ok(lazy.Const(r)))
+			return result.Ok(lazy.Const(r))
 		}),
 	}
 }
@@ -329,9 +329,9 @@ func Apply5P1R[P1, P2, P3, P4, P5, R any](f func(P1, P2, P3, P4, P5) (R, error),
 		v: lazy.New(func() either.Either[R, error] {
 			r, err := f(lazy.Eval(p1), lazy.Eval(p2), lazy.Eval(p3), lazy.Eval(p4), lazy.Eval(p5))
 			if err != nil {
-				return lazy.Eval(result.Fail[R](lazy.Const(err)))
+				return result.Fail[R](lazy.Const(err))
 			}
-			return lazy.Eval(result.Ok(lazy.Const(r)))
+			return result.Ok(lazy.Const(r))
 		}),
 	}
 }
@@ -357,9 +357,9 @@ func Apply2R[R1, R2 any](f func() (R1, R2, error)) IO[tuple.Tuple2[R1, R2]] {
 		v: lazy.New(func() either.Either[tuple.Tuple2[R1, R2], error] {
 			r1, r2, err := f()
 			if err != nil {
-				return lazy.Eval(result.Fail[tuple.Tuple2[R1, R2]](lazy.Const(err)))
+				return result.Fail[tuple.Tuple2[R1, R2]](lazy.Const(err))
 			}
-			return lazy.Eval(result.Ok(lazy.Const(tuple.New2(r1, r2))))
+			return result.Ok(lazy.Const(tuple.New2(r1, r2)))
 		}),
 	}
 }
@@ -389,9 +389,9 @@ func Apply1P2R[P, R1, R2 any](f func(P) (R1, R2, error), p lazy.Value[P]) IO[tup
 		v: lazy.New(func() either.Either[tuple.Tuple2[R1, R2], error] {
 			r1, r2, err := f(lazy.Eval(p))
 			if err != nil {
-				return lazy.Eval(result.Fail[tuple.Tuple2[R1, R2]](lazy.Const(err)))
+				return result.Fail[tuple.Tuple2[R1, R2]](lazy.Const(err))
 			}
-			return lazy.Eval(result.Ok(lazy.Const(tuple.New2(r1, r2))))
+			return result.Ok(lazy.Const(tuple.New2(r1, r2)))
 		}),
 	}
 }
@@ -421,9 +421,9 @@ func Apply2P2R[P1, P2, R1, R2 any](f func(P1, P2) (R1, R2, error), p1 lazy.Value
 		v: lazy.New(func() either.Either[tuple.Tuple2[R1, R2], error] {
 			r1, r2, err := f(lazy.Eval(p1), lazy.Eval(p2))
 			if err != nil {
-				return lazy.Eval(result.Fail[tuple.Tuple2[R1, R2]](lazy.Const(err)))
+				return result.Fail[tuple.Tuple2[R1, R2]](lazy.Const(err))
 			}
-			return lazy.Eval(result.Ok(lazy.Const(tuple.New2(r1, r2))))
+			return result.Ok(lazy.Const(tuple.New2(r1, r2)))
 		}),
 	}
 }
@@ -453,9 +453,9 @@ func Apply3P2R[P1, P2, P3, R1, R2 any](f func(P1, P2, P3) (R1, R2, error), p1 la
 		v: lazy.New(func() either.Either[tuple.Tuple2[R1, R2], error] {
 			r1, r2, err := f(lazy.Eval(p1), lazy.Eval(p2), lazy.Eval(p3))
 			if err != nil {
-				return lazy.Eval(result.Fail[tuple.Tuple2[R1, R2]](lazy.Const(err)))
+				return result.Fail[tuple.Tuple2[R1, R2]](lazy.Const(err))
 			}
-			return lazy.Eval(result.Ok(lazy.Const(tuple.New2(r1, r2))))
+			return result.Ok(lazy.Const(tuple.New2(r1, r2)))
 		}),
 	}
 }
@@ -485,9 +485,9 @@ func Apply4P2R[P1, P2, P3, P4, R1, R2 any](f func(P1, P2, P3, P4) (R1, R2, error
 		v: lazy.New(func() either.Either[tuple.Tuple2[R1, R2], error] {
 			r1, r2, err := f(lazy.Eval(p1), lazy.Eval(p2), lazy.Eval(p3), lazy.Eval(p4))
 			if err != nil {
-				return lazy.Eval(result.Fail[tuple.Tuple2[R1, R2]](lazy.Const(err)))
+				return result.Fail[tuple.Tuple2[R1, R2]](lazy.Const(err))
 			}
-			return lazy.Eval(result.Ok(lazy.Const(tuple.New2(r1, r2))))
+			return result.Ok(lazy.Const(tuple.New2(r1, r2)))
 		}),
 	}
 }
@@ -517,9 +517,9 @@ func Apply5P2R[P1, P2, P3, P4, P5, R1, R2 any](f func(P1, P2, P3, P4, P5) (R1, R
 		v: lazy.New(func() either.Either[tuple.Tuple2[R1, R2], error] {
 			r1, r2, err := f(lazy.Eval(p1), lazy.Eval(p2), lazy.Eval(p3), lazy.Eval(p4), lazy.Eval(p5))
 			if err != nil {
-				return lazy.Eval(result.Fail[tuple.Tuple2[R1, R2]](lazy.Const(err)))
+				return result.Fail[tuple.Tuple2[R1, R2]](lazy.Const(err))
 			}
-			return lazy.Eval(result.Ok(lazy.Const(tuple.New2(r1, r2))))
+			return result.Ok(lazy.Const(tuple.New2(r1, r2)))
 		}),
 	}
 }

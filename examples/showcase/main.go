@@ -31,8 +31,8 @@ func Connect(remote string) (*Connection, error) {
 
 func Send(conn *Connection, msg []byte) error {
 	fmt.Println("Send()", conn, string(msg))
-	return nil
-	// return fmt.Errorf("connection reset")
+	// return nil
+	return fmt.Errorf("connection reset")
 }
 
 func Recv(conn *Connection) ([]byte, error) {
@@ -49,17 +49,17 @@ func main() {
 		}
 		conn, err := Connect(conf.Remote)
 		if err != nil {
-			fmt.Println("error:", err)
+			fmt.Println(err)
 			return
 		}
 		err = Send(conn, []byte("hello"))
 		if err != nil {
-			fmt.Println("error:", err)
+			fmt.Println(fmt.Errorf("Sending 'hello' failed: %w", err))
 			return
 		}
 		ack, err := Recv(conn)
 		if err != nil {
-			fmt.Println("error:", err)
+			fmt.Println(err)
 			return
 		}
 		fmt.Println(string(ack))
@@ -83,7 +83,7 @@ func main() {
 						)),
 						func(conn lazy.Value[*Connection]) io.IO[[]byte] {
 							return io.Bind(
-								Send(conn, lazy.Const([]byte("hello"))),
+								io.Descript(Send(conn, lazy.Const([]byte("hello"))), lazy.Const("Sending 'hello'")),
 								func(lazy.Value[monadic.Void]) io.IO[[]byte] {
 									return io.Bind(
 										Recv(conn),
@@ -99,7 +99,7 @@ func main() {
 			),
 		)
 		if err != nil {
-			fmt.Println("error", err)
+			fmt.Println(err)
 			return
 		}
 		fmt.Println(string(content))
@@ -111,7 +111,7 @@ func main() {
 			io.Do(func(ctx *io.Context[[]byte]) io.IO[[]byte] {
 				Init := io.Lift1R(Init)
 				ConnectX := io.Lift1P1RX[[]byte](Connect)
-				SendX := io.Lift2PX[[]byte](Send)
+				Send := io.Lift2P(Send)
 				RecvX := io.Lift1P1RX[[]byte](Recv)
 
 				conf := io.From(ctx, io.Try(Init()))
@@ -121,13 +121,13 @@ func main() {
 					lazy.Lift(func(_ error) string { return "localhost:443" }),
 				)
 				conn := ConnectX(ctx, remote)
-				SendX(ctx, conn, lazy.Const([]byte("hello")))
+				io.Continue(ctx, io.Descript(Send(conn, lazy.Const([]byte("hello"))), lazy.Const("Sending 'hello'")))
 				ack := RecvX(ctx, conn)
 				return io.Ret(ack)
 			}),
 		)
 		if err != nil {
-			fmt.Println("error:", err)
+			fmt.Println(err)
 			return
 		}
 		fmt.Println(string(content))
