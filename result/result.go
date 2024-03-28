@@ -15,11 +15,11 @@ func Fail[A any](err lazy.Value[error]) either.Either[A, error] {
 	return either.Right[A](err)
 }
 
-func IsOk[A any](et lazy.Value[either.Either[A, error]]) lazy.Value[bool] {
+func IsOk[A any](et lazy.Value[either.Either[A, error]]) lazy.Bool {
 	return either.IsLeft(et)
 }
 
-func IsFail[A any](et lazy.Value[either.Either[A, error]]) lazy.Value[bool] {
+func IsFail[A any](et lazy.Value[either.Either[A, error]]) lazy.Bool {
 	return either.IsRight(et)
 }
 
@@ -43,7 +43,7 @@ func MapFail[A any](fa lazy.Value[either.Either[A, error]], m func(lazy.Value[er
 	return either.MapRight(fa, m)
 }
 
-func WrapFail[A any](msg lazy.Value[string], fa lazy.Value[either.Either[A, error]]) lazy.Value[either.Either[A, error]] {
+func WrapFail[A any](msg lazy.String, fa lazy.Value[either.Either[A, error]]) lazy.Value[either.Either[A, error]] {
 	return MapFail(fa, lazy.Lift(func(err error) error {
 		return fmt.Errorf("%s %w", lazy.Eval(msg), err)
 	}))

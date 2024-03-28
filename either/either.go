@@ -7,7 +7,7 @@ import (
 type Either[A, B any] struct {
 	left   lazy.Value[A]
 	right  lazy.Value[B]
-	isLeft lazy.Value[bool]
+	isLeft lazy.Bool
 }
 
 func Left[A, B any](v lazy.Value[A]) Either[A, B] {
@@ -24,15 +24,15 @@ func Right[A, B any](v lazy.Value[B]) Either[A, B] {
 	}
 }
 
-func IsLeft[A, B any](et lazy.Value[Either[A, B]]) lazy.Value[bool] {
-	return lazy.Map(et, func(e Either[A, B]) bool {
-		return lazy.Eval(e.isLeft)
+func IsLeft[A, B any](et lazy.Value[Either[A, B]]) lazy.Bool {
+	return lazy.Bind(et, func(e Either[A, B]) lazy.Bool {
+		return e.isLeft
 	})
 }
 
-func IsRight[A, B any](et lazy.Value[Either[A, B]]) lazy.Value[bool] {
-	return lazy.Map(et, func(e Either[A, B]) bool {
-		return !lazy.Eval(e.isLeft)
+func IsRight[A, B any](et lazy.Value[Either[A, B]]) lazy.Bool {
+	return lazy.Bind(et, func(e Either[A, B]) lazy.Bool {
+		return lazy.Not(e.isLeft)
 	})
 }
 

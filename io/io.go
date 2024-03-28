@@ -76,7 +76,7 @@ func Try[A any](m IO[A]) IO[either.Either[A, error]] {
 	}
 }
 
-func Descript[A any](m IO[A], desc lazy.Value[string]) IO[A] {
+func Descript[A any](m IO[A], desc lazy.String) IO[A] {
 	return IO[A]{
 		v: lazy.Bind(result.IsFail(m.v), func(fail bool) lazy.Value[either.Either[A, error]] {
 			if fail {

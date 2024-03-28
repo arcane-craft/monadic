@@ -4,7 +4,7 @@ import "github.com/arcane-craft/monadic/lazy"
 
 type Option[A any] struct {
 	v     lazy.Value[A]
-	valid lazy.Value[bool]
+	valid lazy.Bool
 }
 
 func Some[A any](a lazy.Value[A]) Option[A] {
@@ -20,7 +20,7 @@ func None[A any]() Option[A] {
 	}
 }
 
-func IsNone[A any](v lazy.Value[Option[A]]) lazy.Value[bool] {
+func IsNone[A any](v lazy.Value[Option[A]]) lazy.Bool {
 	return lazy.Map(v, func(o Option[A]) bool {
 		return !lazy.Eval(o.valid)
 	})
