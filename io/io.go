@@ -12,7 +12,7 @@ type IO[A any] struct {
 
 func Ret[A any](v lazy.Value[A]) IO[A] {
 	return IO[A]{
-		v: lazy.Const(result.Ok(v)),
+		v: result.Ok(v),
 	}
 }
 
@@ -72,7 +72,7 @@ func Do[A any](block func(*Context[A]) IO[A]) IO[A] {
 
 func Try[A any](m IO[A]) IO[either.Either[A, error]] {
 	return IO[either.Either[A, error]]{
-		v: lazy.Const(either.Left[either.Either[A, error], error](m.v)),
+		v: either.Left[either.Either[A, error], error](m.v),
 	}
 }
 
@@ -87,4 +87,12 @@ func Descript[A any](m IO[A], desc lazy.String) IO[A] {
 			return m.v
 		}),
 	}
+}
+
+func Eval[A any](m IO[A]) (A, error) {
+	var zero A
+	if lazy.Eval(result.IsFail(m.v)) {
+		return zero, lazy.Eval(result.FromFail(m.v))
+	}
+	return lazy.Eval(result.FromOk(m.v, lazy.Const(zero))), nil
 }

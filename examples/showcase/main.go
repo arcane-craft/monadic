@@ -79,7 +79,7 @@ func main() {
 						Connect(either.EitherOf(
 							conf,
 							lazy.Lift(func(c *Config) string { return c.Remote }),
-							lazy.Lift(func(_ error) string { return "localhost:443" }),
+							lazy.Lift(func(error) string { return "localhost:443" }),
 						)),
 						func(conn lazy.Value[*Connection]) io.IO[[]byte] {
 							return io.Bind(
@@ -107,18 +107,17 @@ func main() {
 	// =>
 	func() {
 		fmt.Println("run monadic case by do syntax...")
+		Init := io.Lift1R(Init)
+		ConnectX := io.Lift1P1RX[[]byte](Connect)
+		Send := io.Lift2P(Send)
+		RecvX := io.Lift1P1RX[[]byte](Recv)
 		content, err := io.Eval(
 			io.Do(func(ctx *io.Context[[]byte]) io.IO[[]byte] {
-				Init := io.Lift1R(Init)
-				ConnectX := io.Lift1P1RX[[]byte](Connect)
-				Send := io.Lift2P(Send)
-				RecvX := io.Lift1P1RX[[]byte](Recv)
-
 				conf := io.From(ctx, io.Try(Init()))
 				remote := either.EitherOf(
 					conf,
 					lazy.Lift(func(c *Config) string { return c.Remote }),
-					lazy.Lift(func(_ error) string { return "localhost:443" }),
+					lazy.Lift(func(error) string { return "localhost:443" }),
 				)
 				conn := ConnectX(ctx, remote)
 				io.Continue(ctx, io.Descript(Send(conn, lazy.Const([]byte("hello"))), lazy.Const("Sending 'hello'")))

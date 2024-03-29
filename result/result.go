@@ -7,11 +7,11 @@ import (
 	"github.com/arcane-craft/monadic/lazy"
 )
 
-func Ok[A any](v lazy.Value[A]) either.Either[A, error] {
+func Ok[A any](v lazy.Value[A]) lazy.Value[either.Either[A, error]] {
 	return either.Left[A, error](v)
 }
 
-func Fail[A any](err lazy.Value[error]) either.Either[A, error] {
+func Fail[A any](err lazy.Value[error]) lazy.Value[either.Either[A, error]] {
 	return either.Right[A](err)
 }
 
@@ -28,7 +28,7 @@ func FromOk[A any](v lazy.Value[either.Either[A, error]], def lazy.Value[A]) laz
 }
 
 func FromFail[A any](v lazy.Value[either.Either[A, error]]) lazy.Value[error] {
-	return either.FromRight(v, lazy.Const[error](nil))
+	return either.FromRight(v, lazy.Zero[error]())
 }
 
 func Map[A, B any](fa lazy.Value[either.Either[A, error]], m func(lazy.Value[A]) lazy.Value[B]) lazy.Value[either.Either[B, error]] {
@@ -43,8 +43,14 @@ func MapFail[A any](fa lazy.Value[either.Either[A, error]], m func(lazy.Value[er
 	return either.MapRight(fa, m)
 }
 
+func BindFail[A any](ma lazy.Value[either.Either[A, error]], mm func(lazy.Value[error]) lazy.Value[either.Either[error, A]]) lazy.Value[either.Either[A, error]] {
+	return either.BindRight(ma, mm)
+}
+
 func WrapFail[A any](msg lazy.String, fa lazy.Value[either.Either[A, error]]) lazy.Value[either.Either[A, error]] {
-	return MapFail(fa, lazy.Lift(func(err error) error {
-		return fmt.Errorf("%s %w", lazy.Eval(msg), err)
-	}))
+	return BindFail(fa, func(err lazy.Value[error]) lazy.Value[either.Either[error, A]] {
+		return either.Left[error, A](lazy.Lift2(func(s string, e error) error {
+			return fmt.Errorf("%s %w", s, e)
+		})(msg, err))
+	})
 }
