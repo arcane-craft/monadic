@@ -1,18 +1,20 @@
 package lazy
 
+import "sync"
+
 type Value[A any] struct {
 	f func() A
 }
 
 func New[A any](f func() A) Value[A] {
-	var ret *A
+	var once sync.Once
+	var ret A
 	return Value[A]{
 		f: func() A {
-			if ret == nil {
-				ret = new(A)
-				*ret = f()
-			}
-			return *ret
+			once.Do(func() {
+				ret = f()
+			})
+			return ret
 		},
 	}
 }
