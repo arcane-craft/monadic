@@ -87,7 +87,7 @@ func Or(a, b Bool) Bool {
 	})
 }
 
-func All(a Bool, left ...Bool) Bool {
+func AllOf(a Bool, left ...Bool) Bool {
 	return New(func() bool {
 		if !Eval(a) {
 			return false
@@ -101,7 +101,7 @@ func All(a Bool, left ...Bool) Bool {
 	})
 }
 
-func Any(a Bool, left ...Bool) Bool {
+func AnyOf(a Bool, left ...Bool) Bool {
 	return New(func() bool {
 		if Eval(a) {
 			return true

@@ -16,6 +16,12 @@ func Ret[A any](v lazy.Value[A]) IO[A] {
 	}
 }
 
+func Zero[A any]() IO[A] {
+	return IO[A]{
+		v: result.Ok(lazy.Zero[A]()),
+	}
+}
+
 func Bind[A, B any](ma IO[A], mm func(lazy.Value[A]) IO[B]) IO[B] {
 	return IO[B]{
 		v: result.Bind(ma.v, func(v lazy.Value[A]) lazy.Value[either.Either[B, error]] {

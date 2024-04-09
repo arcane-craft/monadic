@@ -7,6 +7,7 @@ import (
 	"github.com/arcane-craft/monadic/either"
 	"github.com/arcane-craft/monadic/io"
 	"github.com/arcane-craft/monadic/lazy"
+	"github.com/arcane-craft/monadic/log"
 )
 
 type Config struct {
@@ -31,8 +32,8 @@ func Connect(remote string) (*Connection, error) {
 
 func Send(conn *Connection, msg []byte) error {
 	fmt.Println("Send()", conn, string(msg))
-	// return nil
-	return fmt.Errorf("connection reset")
+	return nil
+	// return fmt.Errorf("connection reset")
 }
 
 func Recv(conn *Connection) ([]byte, error) {
@@ -54,7 +55,7 @@ func main() {
 		}
 		err = Send(conn, []byte("hello"))
 		if err != nil {
-			fmt.Println(fmt.Errorf("Sending 'hello' failed: %w", err))
+			fmt.Println(fmt.Errorf("sending 'hello' failed: %w", err))
 			return
 		}
 		ack, err := Recv(conn)
@@ -83,7 +84,7 @@ func main() {
 						)),
 						func(conn lazy.Value[*Connection]) io.IO[[]byte] {
 							return io.Bind(
-								io.Descript(Send(conn, lazy.Const([]byte("hello"))), lazy.Const("Sending 'hello'")),
+								io.Descript(Send(conn, lazy.Const([]byte("hello"))), lazy.Const("sending 'hello'")),
 								func(lazy.Value[monadic.Void]) io.IO[[]byte] {
 									return io.Bind(
 										Recv(conn),
@@ -120,8 +121,9 @@ func main() {
 					lazy.Lift(func(error) string { return "localhost:443" }),
 				)
 				conn := ConnectX(ctx, remote)
-				io.Continue(ctx, io.Descript(Send(conn, lazy.Const([]byte("hello"))), lazy.Const("Sending 'hello'")))
+				io.Continue(ctx, io.Descript(Send(conn, lazy.Const([]byte("hello"))), lazy.Const("sending 'hello'")))
 				ack := RecvX(ctx, conn)
+				io.Continue(ctx, log.Print(lazy.ToAny(lazy.ToString[string](ack))))
 				return io.Ret(ack)
 			}),
 		)
