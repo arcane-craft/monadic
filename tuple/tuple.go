@@ -2,13 +2,13 @@ package tuple
 
 type Tuple[A any] func() A
 
-func New[A any](a A) Tuple[A] {
+func T[A any](a A) Tuple[A] {
 	return func() A {
 		return a
 	}
 }
 
-func Map[A, Ap any](fa Tuple[A], m func(A) Ap) Tuple[Ap] {
+func Map[A, Ap any](m func(A) Ap, fa Tuple[A]) Tuple[Ap] {
 	return func() Ap {
 		return m(fa())
 	}
@@ -16,13 +16,21 @@ func Map[A, Ap any](fa Tuple[A], m func(A) Ap) Tuple[Ap] {
 
 type Tuple2[A, B any] func() (A, B)
 
-func New2[A, B any](a A, b B) Tuple2[A, B] {
+func T2[A, B any](a A, b B) Tuple2[A, B] {
 	return func() (A, B) {
 		return a, b
 	}
 }
 
-func Map2[A, B, Ap, Bp any](fa Tuple2[A, B], m func(A, B) (Ap, Bp)) Tuple2[Ap, Bp] {
+func T1st[A, B any](a A, _ B) A {
+	return a
+}
+
+func T2nd[A, B any](_ A, b B) B {
+	return b
+}
+
+func Map2[A, B, Ap, Bp any](m func(A, B) (Ap, Bp), fa Tuple2[A, B]) Tuple2[Ap, Bp] {
 	return func() (Ap, Bp) {
 		return m(fa())
 	}
@@ -36,7 +44,19 @@ func New3[A, B, C any](a A, b B, c C) Tuple3[A, B, C] {
 	}
 }
 
-func Map3[A, B, C, Ap, Bp, Cp any](fa Tuple3[A, B, C], m func(A, B, C) (Ap, Bp, Cp)) Tuple3[Ap, Bp, Cp] {
+func T1st3[A, B, C any](a A, _ B, _ C) A {
+	return a
+}
+
+func T2nd3[A, B, C any](_ A, b B, _ C) B {
+	return b
+}
+
+func T3rd3[A, B, C any](_ A, _ B, c C) C {
+	return c
+}
+
+func Map3[A, B, C, Ap, Bp, Cp any](m func(A, B, C) (Ap, Bp, Cp), fa Tuple3[A, B, C]) Tuple3[Ap, Bp, Cp] {
 	return func() (Ap, Bp, Cp) {
 		return m(fa())
 	}
@@ -44,13 +64,29 @@ func Map3[A, B, C, Ap, Bp, Cp any](fa Tuple3[A, B, C], m func(A, B, C) (Ap, Bp, 
 
 type Tuple4[A, B, C, D any] func() (A, B, C, D)
 
-func New4[A, B, C, D any](a A, b B, c C, d D) Tuple4[A, B, C, D] {
+func T4[A, B, C, D any](a A, b B, c C, d D) Tuple4[A, B, C, D] {
 	return func() (A, B, C, D) {
 		return a, b, c, d
 	}
 }
 
-func Map4[A, B, C, D, Ap, Bp, Cp, Dp any](fa Tuple4[A, B, C, D], m func(A, B, C, D) (Ap, Bp, Cp, Dp)) Tuple4[Ap, Bp, Cp, Dp] {
+func T1st4[A, B, C, D any](a A, _ B, _ C, _ D) A {
+	return a
+}
+
+func T2nd4[A, B, C, D any](_ A, b B, _ C, _ D) B {
+	return b
+}
+
+func T3rd4[A, B, C, D any](_ A, _ B, c C, _ D) C {
+	return c
+}
+
+func T4th4[A, B, C, D any](_ A, _ B, _ C, d D) D {
+	return d
+}
+
+func Map4[A, B, C, D, Ap, Bp, Cp, Dp any](m func(A, B, C, D) (Ap, Bp, Cp, Dp), fa Tuple4[A, B, C, D]) Tuple4[Ap, Bp, Cp, Dp] {
 	return func() (Ap, Bp, Cp, Dp) {
 		return m(fa())
 	}
@@ -58,56 +94,34 @@ func Map4[A, B, C, D, Ap, Bp, Cp, Dp any](fa Tuple4[A, B, C, D], m func(A, B, C,
 
 type Tuple5[A, B, C, D, E any] func() (A, B, C, D, E)
 
-func New5[A, B, C, D, E any](a A, b B, c C, d D, e E) Tuple5[A, B, C, D, E] {
+func T5[A, B, C, D, E any](a A, b B, c C, d D, e E) Tuple5[A, B, C, D, E] {
 	return func() (A, B, C, D, E) {
 		return a, b, c, d, e
 	}
 }
 
-func Map5[A, B, C, D, E, Ap, Bp, Cp, Dp, Ep any](fa Tuple5[A, B, C, D, E], m func(A, B, C, D, E) (Ap, Bp, Cp, Dp, Ep)) Tuple5[Ap, Bp, Cp, Dp, Ep] {
+func T1st5[A, B, C, D, E any](a A, _ B, _ C, _ D, _ E) A {
+	return a
+}
+
+func T2nd5[A, B, C, D, E any](_ A, b B, _ C, _ D, _ E) B {
+	return b
+}
+
+func T3rd5[A, B, C, D, E any](_ A, _ B, c C, _ D, _ E) C {
+	return c
+}
+
+func T4th5[A, B, C, D, E any](_ A, _ B, _ C, d D, _ E) D {
+	return d
+}
+
+func T5th5[A, B, C, D, E any](_ A, _ B, _ C, _ D, e E) E {
+	return e
+}
+
+func Map5[A, B, C, D, E, Ap, Bp, Cp, Dp, Ep any](m func(A, B, C, D, E) (Ap, Bp, Cp, Dp, Ep), fa Tuple5[A, B, C, D, E]) Tuple5[Ap, Bp, Cp, Dp, Ep] {
 	return func() (Ap, Bp, Cp, Dp, Ep) {
-		return m(fa())
-	}
-}
-
-type Tuple6[A, B, C, D, E, F any] func() (A, B, C, D, E, F)
-
-func New6[A, B, C, D, E, F any](a A, b B, c C, d D, e E, f F) Tuple6[A, B, C, D, E, F] {
-	return func() (A, B, C, D, E, F) {
-		return a, b, c, d, e, f
-	}
-}
-
-func Map6[A, B, C, D, E, F, Ap, Bp, Cp, Dp, Ep, Fp any](fa Tuple6[A, B, C, D, E, F], m func(A, B, C, D, E, F) (Ap, Bp, Cp, Dp, Ep, Fp)) Tuple6[Ap, Bp, Cp, Dp, Ep, Fp] {
-	return func() (Ap, Bp, Cp, Dp, Ep, Fp) {
-		return m(fa())
-	}
-}
-
-type Tuple7[A, B, C, D, E, F, G any] func() (A, B, C, D, E, F, G)
-
-func New7[A, B, C, D, E, F, G any](a A, b B, c C, d D, e E, f F, g G) Tuple7[A, B, C, D, E, F, G] {
-	return func() (A, B, C, D, E, F, G) {
-		return a, b, c, d, e, f, g
-	}
-}
-
-func Map7[A, B, C, D, E, F, G, Ap, Bp, Cp, Dp, Ep, Fp, Gp any](fa Tuple7[A, B, C, D, E, F, G], m func(A, B, C, D, E, F, G) (Ap, Bp, Cp, Dp, Ep, Fp, Gp)) Tuple7[Ap, Bp, Cp, Dp, Ep, Fp, Gp] {
-	return func() (Ap, Bp, Cp, Dp, Ep, Fp, Gp) {
-		return m(fa())
-	}
-}
-
-type Tuple8[A, B, C, D, E, F, G, H any] func() (A, B, C, D, E, F, G, H)
-
-func New8[A, B, C, D, E, F, G, H any](a A, b B, c C, d D, e E, f F, g G, h H) Tuple8[A, B, C, D, E, F, G, H] {
-	return func() (A, B, C, D, E, F, G, H) {
-		return a, b, c, d, e, f, g, h
-	}
-}
-
-func Map8[A, B, C, D, E, F, G, H, Ap, Bp, Cp, Dp, Ep, Fp, Gp, Hp any](fa Tuple8[A, B, C, D, E, F, G, H], m func(A, B, C, D, E, F, G, H) (Ap, Bp, Cp, Dp, Ep, Fp, Gp, Hp)) Tuple8[Ap, Bp, Cp, Dp, Ep, Fp, Gp, Hp] {
-	return func() (Ap, Bp, Cp, Dp, Ep, Fp, Gp, Hp) {
 		return m(fa())
 	}
 }

@@ -1,103 +1,77 @@
 package either
 
 import (
-	"github.com/arcane-craft/monadic/lazy"
+	"github.com/arcane-craft/monadic"
+	"github.com/arcane-craft/monadic/function"
+	"github.com/arcane-craft/monadic/monad"
 )
 
-type Either[A, B any] struct {
-	left   lazy.Value[A]
-	right  lazy.Value[B]
-	isLeft bool
+type eType[A any] struct {
+	e *A
 }
 
-func Left[A, B any](v lazy.Value[A]) lazy.Value[Either[A, B]] {
-	return lazy.Const(Either[A, B]{
-		left:   v,
-		isLeft: true,
-	})
+func (e eType[A]) IsNil() bool {
+	return e.e == nil
 }
 
-func Right[A, B any](v lazy.Value[B]) lazy.Value[Either[A, B]] {
-	return lazy.Const(Either[A, B]{
-		right:  v,
-		isLeft: false,
-	})
+type rEither[A, B any, _E monadic.Nillable] struct {
+	left  *A
+	right *B
 }
 
-func IsLeft[A, B any](et lazy.Value[Either[A, B]]) lazy.Bool {
-	return lazy.Map(et, func(e Either[A, B]) bool {
-		return e.isLeft
-	})
+type Either[A, B any] rEither[A, B, eType[A]]
+
+func Left[B, A any](v A) Either[A, B] {
+	return Either[A, B]{
+		left: &v,
+	}
 }
 
-func IsRight[A, B any](et lazy.Value[Either[A, B]]) lazy.Bool {
-	return lazy.Map(et, func(e Either[A, B]) bool {
-		return !e.isLeft
-	})
+func Right[A, B any](v B) Either[A, B] {
+	return Either[A, B]{
+		right: &v,
+	}
 }
 
-func FromLeft[A, B any](et lazy.Value[Either[A, B]], def lazy.Value[A]) lazy.Value[A] {
-	return lazy.Bind(et, func(e Either[A, B]) lazy.Value[A] {
-		if e.isLeft {
-			return e.left
-		}
-		return def
-	})
+func IsLeft[A, B any](e Either[A, B]) bool {
+	return e.left != nil
 }
 
-func FromRight[A, B any](et lazy.Value[Either[A, B]], def lazy.Value[B]) lazy.Value[B] {
-	return lazy.Bind(et, func(e Either[A, B]) lazy.Value[B] {
-		if !e.isLeft {
-			return e.right
-		}
-		return def
-	})
+func IsRight[A, B any](e Either[A, B]) bool {
+	return e.right != nil
 }
 
-func EitherOf[A, B, C any](et lazy.Value[Either[A, B]], left func(lazy.Value[A]) lazy.Value[C], right func(lazy.Value[B]) lazy.Value[C]) lazy.Value[C] {
-	return lazy.Bind(et, func(e Either[A, B]) lazy.Value[C] {
-		if e.isLeft {
-			return left(e.left)
-		}
-		return right(e.right)
-	})
+func FromLeft[A, B any](a A, e Either[A, B]) A {
+	if e.left != nil {
+		return *e.left
+	}
+	return a
 }
 
-func Map[A, B, C any](fa lazy.Value[Either[A, B]], m func(lazy.Value[A]) lazy.Value[C]) lazy.Value[Either[C, B]] {
-	return lazy.Bind(fa, func(e Either[A, B]) lazy.Value[Either[C, B]] {
-		if e.isLeft {
-			return Left[C, B](m(e.left))
-		}
-		return Right[C](e.right)
-	})
+func FromRight[A, B any](b B, e Either[A, B]) B {
+	if e.right != nil {
+		return *e.right
+	}
+	return b
 }
 
-func Bind[A, B, C any](ma lazy.Value[Either[A, B]], mm func(lazy.Value[A]) lazy.Value[Either[C, B]]) lazy.Value[Either[C, B]] {
-	return lazy.Bind(ma, func(e Either[A, B]) lazy.Value[Either[C, B]] {
-		if e.isLeft {
-			return mm(e.left)
-		}
-		return Right[C](e.right)
-	})
+func EitherOf[A, B, C any](left func(A) C, right func(B) C, e Either[A, B]) C {
+	if e.left != nil {
+		return left(*e.left)
+	}
+	return right(*e.right)
 }
 
-func Swap[A, B any](v lazy.Value[Either[A, B]]) lazy.Value[Either[B, A]] {
-	return lazy.Bind(v, func(e Either[A, B]) lazy.Value[Either[B, A]] {
-		if e.isLeft {
-			return Right[B](e.left)
-		}
-		return Left[B, A](e.right)
-	})
+func Swap[A, B any](e Either[A, B]) Either[B, A] {
+	return EitherOf(Right[B, A], Left[A, B], e)
 }
 
-func MapRight[A, B, C any](fa lazy.Value[Either[A, B]], m func(lazy.Value[B]) lazy.Value[C]) lazy.Value[Either[A, C]] {
-	return Swap(Map(Swap(fa), func(v lazy.Value[B]) lazy.Value[C] {
-		return m(v)
-	}))
+func MapLeft[A, B, C any](m func(A) B, fa Either[A, C]) Either[B, C] {
+	return EitherOf(function.Compose(Left[C, B], m), Right[B, C], fa)
 }
 
-func BindRight[A, B, C any](ma lazy.Value[Either[A, B]], mm func(lazy.Value[B]) lazy.Value[Either[C, A]]) lazy.Value[Either[A, C]] {
-	return Swap(Bind(Swap(ma), func(v lazy.Value[B]) lazy.Value[Either[C, A]] {
-		return mm(v)
-	}))
+func MapRight[A, B, C any](m func(B) C, fa Either[A, B]) Either[A, C] {
+	return EitherOf(Left[C, A], function.Compose(Right[A, C], m), fa)
 }
+
+var _ = monad.ImplMonadDoClass[Either[any, any]]()
