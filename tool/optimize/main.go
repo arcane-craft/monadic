@@ -9,8 +9,8 @@ import (
 )
 
 func main() {
-	rootDir := os.Args[1]
-	if len(rootDir) <= 0 {
+	var rootDir string
+	if len(os.Args) < 2 {
 		pwd, err := os.Getwd()
 		if err != nil {
 			fmt.Println("get workspace failed:", err)
@@ -18,7 +18,10 @@ func main() {
 			return
 		}
 		rootDir = pwd
+	} else {
+		rootDir = os.Args[1]
 	}
+
 	pkgs, err := LoadPackages(context.Background(), rootDir)
 	if err != nil {
 		fmt.Println("load source packages failed:", err)
