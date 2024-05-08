@@ -15,7 +15,7 @@ https://github.com/arcane-craft/monadic/blob/915556423b447a48127a4f5e7ed532d786b
 - Desugar code with optimize tool before building the project.
 
 ```sh
-go run -mod=mod github.com/arcane-craft/monadic/optimize [PROJECT_ROOT_DIR]
+go run -mod=mod github.com/arcane-craft/monadic/tool/optimize@latest [PROJECT_ROOT_DIR]
 # perform building works..
 ```
 

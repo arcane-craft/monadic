@@ -1,4 +1,4 @@
-module github.com/arcane-craft/monadic/optimize
+module github.com/arcane-craft/monadic/tool/optimize
 
 go 1.21
 
