@@ -31,6 +31,11 @@ func main() {
 	var instances []*MonadInstanceType
 	for _, p := range pkgs {
 		instances = append(instances, NewMonadTypeInspector(p).InspectMonadTypes()...)
+		for path, dep := range p.Imports {
+			if p.PkgPath != path {
+				instances = append(instances, NewMonadTypeInspector(dep).InspectMonadTypes()...)
+			}
+		}
 	}
 	for _, p := range pkgs {
 		files := NewMonadDoSyntaxInspector(p, instances).InspectDoSyntax()
