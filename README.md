@@ -2,7 +2,7 @@
 
 A set of monadic functions for go  
 
-# Showcase
+## Showcase
 
 - Here is classic code.
 
