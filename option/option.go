@@ -1,45 +1,34 @@
 package option
 
-import "github.com/arcane-craft/monadic/lazy"
+import (
+	"github.com/arcane-craft/monadic"
+	"github.com/arcane-craft/monadic/monad"
+)
 
-type Option[A any] struct {
-	v     lazy.Value[A]
-	valid bool
+type eType bool
+
+func (e eType) IsNil() bool {
+	return !bool(e)
 }
 
-func Some[A any](a lazy.Value[A]) lazy.Value[Option[A]] {
-	return lazy.Const(Option[A]{
-		v:     a,
-		valid: true,
-	})
+type rOption[A any, _E monadic.Nillable] struct {
+	v *A
 }
 
-func None[A any]() lazy.Value[Option[A]] {
-	return lazy.Const(Option[A]{
-		valid: false,
-	})
+type Option[A any] rOption[A, eType]
+
+func Some[A any](a A) Option[A] {
+	return Option[A]{
+		v: &a,
+	}
 }
 
-func IsNone[A any](v lazy.Value[Option[A]]) lazy.Bool {
-	return lazy.Map(v, func(o Option[A]) bool {
-		return !o.valid
-	})
+func None[A any]() Option[A] {
+	return Option[A]{}
 }
 
-func Map[A, B any](fa lazy.Value[Option[A]], m func(lazy.Value[A]) lazy.Value[B]) lazy.Value[Option[B]] {
-	return lazy.Bind(fa, func(o Option[A]) lazy.Value[Option[B]] {
-		if o.valid {
-			return Some(m(o.v))
-		}
-		return None[B]()
-	})
+func IsNone[A any](o Option[A]) bool {
+	return o.v == nil
 }
 
-func Bind[A, B any](ma lazy.Value[Option[A]], mm func(lazy.Value[A]) lazy.Value[Option[B]]) lazy.Value[Option[B]] {
-	return lazy.Bind(ma, func(o Option[A]) lazy.Value[Option[B]] {
-		if o.valid {
-			return mm(o.v)
-		}
-		return None[B]()
-	})
-}
+var _ = monad.ImplMonadDoClass[Option[any]]()
