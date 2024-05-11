@@ -12,6 +12,14 @@ func GenNewLine() string {
 	return "\n"
 }
 
+func GenBuildFlags(not bool) string {
+	predicate := ""
+	if not {
+		predicate = "!"
+	}
+	return fmt.Sprintf("//go:build %smonadic_production\n\n", predicate)
+}
+
 func GenImport(pkgName, pkgPath string) string {
 	if len(pkgName) <= 0 {
 		pkgName = "."
@@ -23,11 +31,11 @@ func GenReturn(expr string) string {
 	return fmt.Sprintf("return %s", expr)
 }
 
-func GenZero(pkgName, ty string) string {
+func GenDoInit(pkgName, ty string) string {
 	if len(pkgName) > 0 {
 		pkgName += "."
 	}
-	return fmt.Sprintf("%sZero[%s]()", pkgName, ty)
+	return fmt.Sprintf("%sDoInit[%s]()", pkgName, ty)
 }
 
 func GenBind(pkgName, monadStmt, block string) string {
@@ -94,11 +102,6 @@ func Generate(info *FileInfo, writer io.Writer) error {
 	}
 	var blocks []*ReplaceBlock
 	addImports := make(map[string]string)
-	monadicPkgName, ok := info.Imports[monadicPkgPath]
-	if !ok {
-		monadicPkgName = GetRandPkgName()
-		addImports[monadicPkgPath] = monadicPkgName
-	}
 	for _, s := range info.Syntax {
 		slices.Reverse(s.Block)
 		var lastStmts []string
@@ -150,13 +153,16 @@ func Generate(info *FileInfo, writer io.Writer) error {
 		}
 		blocks = append(blocks, &ReplaceBlock{
 			Old: s.Extent,
-			New: GenThen(monadPkgName, GenZero(monadicPkgName, finalInstanceType), GenThenBlock(finalInstanceType, lastStmts)),
+			New: GenThen(monadPkgName, GenDoInit(monadPkgName, finalInstanceType), GenThenBlock(finalInstanceType, lastStmts)),
 		})
 	}
 	slices.SortFunc(blocks, func(a, b *ReplaceBlock) int {
 		return a.Old.Start.Offset - b.Old.Start.Offset
 	})
 
+	if _, err := writer.Write([]byte(GenBuildFlags(false))); err != nil {
+		return fmt.Errorf("writer.Write() failed: %w", err)
+	}
 	if _, err := io.CopyN(writer, file, int64(info.ImportExtent.End.Offset+1)); err != nil {
 		return fmt.Errorf("io.CopyN() failed: %w", err)
 	}

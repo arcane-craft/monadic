@@ -2,7 +2,9 @@ package main
 
 import (
 	"context"
+	"go/parser"
 	"log"
+	"reflect"
 	"testing"
 )
 
@@ -47,4 +49,13 @@ func TestInspectDoSyntax(t *testing.T) {
 			}
 		}
 	}
+}
+
+func TestParser(t *testing.T) {
+	expr, err := parser.ParseExpr("_A + _B")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	t.Logf("%s: %+v", reflect.TypeOf(expr), expr)
 }

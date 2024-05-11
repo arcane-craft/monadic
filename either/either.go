@@ -1,25 +1,20 @@
 package either
 
 import (
-	"github.com/arcane-craft/monadic"
 	"github.com/arcane-craft/monadic/function"
 	"github.com/arcane-craft/monadic/monad"
 )
 
-type eType[A any] struct {
-	e *A
+type aType[A any] struct {
+	e A
 }
 
-func (e eType[A]) IsNil() bool {
-	return e.e == nil
-}
-
-type rEither[A, B any, _E monadic.Nillable] struct {
+type rEither[A, B any, _T any] struct {
 	left  *A
 	right *B
 }
 
-type Either[A, B any] rEither[A, B, eType[A]]
+type Either[A, B any] rEither[A, B, aType[A]]
 
 func Left[B, A any](v A) Either[A, B] {
 	return Either[A, B]{

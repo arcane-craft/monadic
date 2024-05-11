@@ -5,124 +5,113 @@ import (
 	"github.com/arcane-craft/monadic/functor"
 )
 
-type ApplicativeClass[F monadic.Data[A, _E], A any, _E monadic.Nillable] interface {
-	functor.FunctorClass[F, A, _E]
+type ApplicativeClass[
+	F monadic.Data[A, _T],
+	A any,
+	_T any,
+] interface {
+	Pure(A) F
+	Apply(monadic.Data[func(A) any, _T], F) monadic.Data[any, _T]
 }
 
 func ImplApplicativeClass[
 	F interface {
-		monadic.Data[A, _E]
-		ApplicativeClass[F, A, _E]
+		ApplicativeClass[F, A, _T]
+		functor.FunctorClass[F, A, _T]
+		monadic.Generalize[F, A, _T]
+		monadic.Data[A, _T]
 	},
 	A any,
-	_E monadic.Nillable]() monadic.Void {
+	_T any,
+]() monadic.Void {
 	return monadic.Void{}
 }
 
-type AlternativeClass[F monadic.Data[A, _E], A any, _E monadic.Nillable] interface {
-	ApplicativeClass[F, A, _E]
-	Empty() F
-	Or(F) F
+type AlternativeClass[
+	FA monadic.Data[A, _T],
+	A any,
+	_T any,
+] interface {
+	Empty() FA
+	Or(FA, FA) FA
 }
 
 func ImplAlternativeClass[
 	F interface {
-		monadic.Data[A, _E]
-		AlternativeClass[F, A, _E]
+		AlternativeClass[F, A, _T]
+		ApplicativeClass[F, A, _T]
+		functor.FunctorClass[F, A, _T]
+		monadic.Generalize[F, A, _T]
+		monadic.Data[A, _T]
 	},
 	A any,
-	_E monadic.Nillable]() monadic.Void {
+	_T any,
+]() monadic.Void {
 	return monadic.Void{}
 }
 
 func Pure[
 	F interface {
-		monadic.Data[A, _E]
-		ApplicativeClass[F, A, _E]
+		ApplicativeClass[F, A, _T]
+		functor.FunctorClass[F, A, _T]
+		monadic.Generalize[F, A, _T]
+		monadic.Data[A, _T]
 	},
 	A any,
-	_E monadic.Nillable](a A) F {
-	var f F
-	return f.Init(func() F {
-		return f.Pure(a)
-	})
+	_T any,
+](a A) F {
+	return monadic.Zero[F]().Pure(a)
 }
 
-func SeqApply[
+func Apply[
 	FB interface {
-		monadic.Data[B, _E]
-		ApplicativeClass[FB, B, _E]
+		ApplicativeClass[FB, B, _T]
+		functor.FunctorClass[FB, B, _T]
+		monadic.Generalize[FB, B, _T]
+		monadic.Data[B, _T]
+	},
+	FM interface {
+		ApplicativeClass[FM, func(A) B, _T]
+		functor.FunctorClass[FM, func(A) B, _T]
+		monadic.Generalize[FM, func(A) B, _T]
+		monadic.Data[func(A) B, _T]
+	},
+	FA interface {
+		ApplicativeClass[FA, A, _T]
+		functor.FunctorClass[FA, A, _T]
+		monadic.Generalize[FA, A, _T]
+		monadic.Data[A, _T]
 	},
 	A, B any,
-	FM interface {
-		monadic.Data[func(A) B, _E]
-		ApplicativeClass[FM, func(A) B, _E]
-	},
-	FA interface {
-		monadic.Data[A, _E]
-		ApplicativeClass[FA, A, _E]
-	},
-	_E monadic.Nillable](fm FM, fa FA) FB {
-	var fb FB
-	return fb.Init(func() FB {
-		m, e := fm.Resolve()
-		if !e.IsNil() {
-			return fb.Throw(e)
-		}
-		a, e := fa.Resolve()
-		if !e.IsNil() {
-			return fb.Throw(e)
-		}
-		return fb.Pure(m(a))
-	})
-}
-
-func LiftA2[
-	FC interface {
-		monadic.Data[C, _E]
-		ApplicativeClass[FC, C, _E]
-	},
-	A, B, C any,
-	FA interface {
-		monadic.Data[A, _E]
-		ApplicativeClass[FA, A, _E]
-	},
-	FB interface {
-		monadic.Data[B, _E]
-		ApplicativeClass[FB, B, _E]
-	},
-	_E monadic.Nillable](f func(A, B) C, fa FA, fb FB) FC {
-	var fc FC
-	return fc.Init(func() FC {
-		a, e := fa.Resolve()
-		if !e.IsNil() {
-			return fc.Throw(e)
-		}
-		b, e := fb.Resolve()
-		if !e.IsNil() {
-			return fc.Throw(e)
-		}
-		return fc.Pure(f(a, b))
-	})
+	_T any,
+](fm FM, fa FA) FB {
+	return monadic.Zero[FB]().Concretize(monadic.Zero[FA]().Apply(fm, fa))
 }
 
 func Empty[
 	F interface {
-		monadic.Data[A, _E]
-		AlternativeClass[F, A, _E]
+		AlternativeClass[F, A, _T]
+		ApplicativeClass[F, A, _T]
+		functor.FunctorClass[F, A, _T]
+		monadic.Generalize[F, A, _T]
+		monadic.Data[A, _T]
 	},
 	A any,
-	_E monadic.Nillable]() F {
-	var f F
-	return f.Empty()
+	_T any,
+]() F {
+	return monadic.Zero[F]().Empty()
 }
 
 func Or[
 	F interface {
-		monadic.Data[A, _E]
-		AlternativeClass[F, A, _E]
+		AlternativeClass[F, A, _T]
+		ApplicativeClass[F, A, _T]
+		functor.FunctorClass[F, A, _T]
+		monadic.Generalize[F, A, _T]
+		monadic.Data[A, _T]
 	},
 	A any,
-	_E monadic.Nillable](a F, b F) F {
-	return a.Or(b)
+	_T any,
+](a F, b F) F {
+	return monadic.Zero[F]().Or(a, b)
 }

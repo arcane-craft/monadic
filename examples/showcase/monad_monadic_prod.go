@@ -1,4 +1,4 @@
-//go:build !monadic_production
+//go:build monadic_production
 
 package main
 
@@ -20,13 +20,7 @@ func MonadicDoCase() {
 
 	Perform(
 		Catch(
-			Do(func() IO[int] {
-				conf := Init().X()
-				conn := Connect(conf.Remote).X()
-				Descript(Send(conn, []byte("hello")), "sending 'hello'").X()
-				ack := Recv(conn).X()
-				return Println(string(ack))
-			}),
+			Then(DoInit[IO[int]](), func () IO[int] { return Bind(Init(), func (conf *Config) IO[int] { return Bind(Connect(conf.Remote), func (conn *Connection) IO[int] { return Then(Descript(Send(conn, []byte("hello")), "sending 'hello'"), func () IO[int] { return Bind(Recv(conn), func (ack []byte) IO[int] { return Println(string(ack)) }) }) }) }) }),
 			func(err error) IO[int] {
 				return Println(err)
 			},

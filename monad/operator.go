@@ -3,79 +3,97 @@ package monad
 import (
 	"github.com/arcane-craft/monadic"
 	"github.com/arcane-craft/monadic/applicative"
+	"github.com/arcane-craft/monadic/function"
+	"github.com/arcane-craft/monadic/functor"
 )
 
-type MonadClass[M monadic.Data[A, _E], A any, _E monadic.Nillable] interface {
-	applicative.ApplicativeClass[M, A, _E]
+type MonadClass[
+	M monadic.Data[A, _T],
+	A any,
+	_T any,
+] interface {
+	Bind(M, func(A) monadic.Data[any, _T]) monadic.Data[any, _T]
 }
 
 func ImplMonadClass[
 	M interface {
-		monadic.Data[A, _E]
-		MonadClass[M, A, _E]
+		MonadClass[M, A, _T]
+		applicative.ApplicativeClass[M, A, _T]
+		functor.FunctorClass[M, A, _T]
+		monadic.Generalize[M, A, _T]
+		monadic.Data[A, _T]
 	},
 	A any,
-	_E monadic.Nillable]() monadic.Void {
+	_T any,
+]() monadic.Void {
 	return monadic.Void{}
 }
 
-type MonadDoClass[M monadic.Data[A, _E], A any, _E monadic.Nillable] interface {
-	MonadClass[M, A, _E]
+type MonadDoClass[
+	M monadic.Data[A, _T],
+	A any,
+	_T any,
+] interface {
+	MonadClass[M, A, _T]
+	Do(func() M) M
 	X() A
 }
 
 func ImplMonadDoClass[
 	M interface {
-		monadic.Data[A, _E]
-		MonadDoClass[M, A, _E]
+		MonadDoClass[M, A, _T]
+		applicative.ApplicativeClass[M, A, _T]
+		functor.FunctorClass[M, A, _T]
+		monadic.Generalize[M, A, _T]
+		monadic.Data[A, _T]
 	},
 	A any,
-	_E monadic.Nillable]() monadic.Void {
+	_T any,
+]() monadic.Void {
 	return monadic.Void{}
-}
-
-func Return[
-	M interface {
-		monadic.Data[A, _E]
-		MonadClass[M, A, _E]
-	},
-	A any,
-	_E monadic.Nillable](a A) M {
-	return applicative.Pure[M](a)
 }
 
 func Bind[
 	MA interface {
-		monadic.Data[A, _E]
-		MonadClass[MA, A, _E]
+		MonadClass[MA, A, _T]
+		applicative.ApplicativeClass[MA, A, _T]
+		functor.FunctorClass[MA, A, _T]
+		monadic.Generalize[MA, A, _T]
+		monadic.Data[A, _T]
 	},
 	MB interface {
-		monadic.Data[B, _E]
-		MonadClass[MB, B, _E]
+		MonadClass[MB, B, _T]
+		applicative.ApplicativeClass[MB, B, _T]
+		functor.FunctorClass[MB, B, _T]
+		monadic.Generalize[MB, B, _T]
+		monadic.Data[B, _T]
 	},
 	A, B any,
-	_E monadic.Nillable](ma MA, mm func(A) MB) MB {
-	var mb MB
-	return mb.Init(func() MB {
-		r, e := ma.Resolve()
-		if !e.IsNil() {
-			return mb.Throw(e)
-		}
-		return mm(r)
-	})
+	_T any,
+](ma MA, mm func(A) MB) MB {
+	return monadic.Zero[MB]().Concretize(monadic.Zero[MA]().Bind(ma, func(a A) monadic.Data[any, _T] {
+		return monadic.Zero[MB]().Abstract(mm(a))
+	}))
 }
 
 func Then[
 	MA interface {
-		monadic.Data[A, _E]
-		MonadClass[MA, A, _E]
+		MonadClass[MA, A, _T]
+		applicative.ApplicativeClass[MA, A, _T]
+		functor.FunctorClass[MA, A, _T]
+		monadic.Generalize[MA, A, _T]
+		monadic.Data[A, _T]
 	},
 	MB interface {
-		monadic.Data[B, _E]
-		MonadClass[MB, B, _E]
+		MonadClass[MB, B, _T]
+		applicative.ApplicativeClass[MB, B, _T]
+		functor.FunctorClass[MB, B, _T]
+		monadic.Generalize[MB, B, _T]
+		monadic.Data[B, _T]
 	},
 	A, B any,
-	_E monadic.Nillable](ma MA, mb func() MB) MB {
+	_T any,
+](ma MA, mb func() MB) MB {
 	return Bind(ma, func(A) MB {
 		return mb()
 	})
@@ -83,215 +101,246 @@ func Then[
 
 func Join[
 	MM interface {
-		monadic.Data[M, _E]
-		MonadClass[MM, M, _E]
+		MonadClass[MM, M, _T]
+		applicative.ApplicativeClass[MM, M, _T]
+		functor.FunctorClass[MM, M, _T]
+		monadic.Generalize[MM, M, _T]
+		monadic.Data[A, _T]
 	},
 	M interface {
-		monadic.Data[A, _E]
-		MonadClass[M, A, _E]
+		MonadClass[M, A, _T]
+		applicative.ApplicativeClass[M, A, _T]
+		functor.FunctorClass[M, A, _T]
+		monadic.Generalize[M, A, _T]
+		monadic.Data[A, _T]
 	},
 	A any,
-	_E monadic.Nillable](mm MM) M {
-	return Bind(mm, func(m M) M {
-		return m
-	})
+	_T any,
+](mm MM) M {
+	return Bind(mm, monadic.Id)
 }
 
-type doException[E monadic.Nillable] struct {
-	e E
+func DoInit[
+	M interface {
+		MonadDoClass[M, A, _T]
+		applicative.ApplicativeClass[M, A, _T]
+		functor.FunctorClass[M, A, _T]
+		monadic.Generalize[M, A, _T]
+		monadic.Data[A, _T]
+	},
+	A any,
+	_T any,
+]() M {
+	return Return[M](monadic.Zero[A]())
 }
 
 func Do[
 	M interface {
-		monadic.Data[A, _E]
-		MonadDoClass[M, A, _E]
+		MonadDoClass[M, A, _T]
+		applicative.ApplicativeClass[M, A, _T]
+		functor.FunctorClass[M, A, _T]
+		monadic.Generalize[M, A, _T]
+		monadic.Data[A, _T]
 	},
 	A any,
-	_E monadic.Nillable](proc func() M) M {
-	var m M
-	return m.Init(func() (out M) {
-		defer func() {
-			e := recover()
-			if e != nil {
-				if doE, ok := e.(*doException[_E]); ok {
-					out = m.Throw(doE.e)
-					return
-				}
-			}
-			panic(e)
-		}()
-		out = proc()
-		return
-	})
-}
-
-func X[
-	M interface {
-		monadic.Data[A, _E]
-		MonadDoClass[M, A, _E]
-	},
-	A any,
-	_E monadic.Nillable](m M) A {
-	r, e := m.Resolve()
-	if !e.IsNil() {
-		panic(&doException[_E]{
-			e: e,
-		})
-	}
-	return r
+	_T any,
+](proc func() M) M {
+	return monadic.Zero[M]().Do(proc)
 }
 
 func LiftM[
 	MB interface {
-		monadic.Data[B, _E]
-		MonadClass[MB, B, _E]
+		MonadClass[MB, B, _T]
+		applicative.ApplicativeClass[MB, B, _T]
+		functor.FunctorClass[MB, B, _T]
+		monadic.Generalize[MB, B, _T]
+		monadic.Data[B, _T]
 	},
 	A, B any,
 	MA interface {
-		monadic.Data[A, _E]
-		MonadClass[MA, A, _E]
+		MonadClass[MA, A, _T]
+		applicative.ApplicativeClass[MA, A, _T]
+		functor.FunctorClass[MA, A, _T]
+		monadic.Generalize[MA, A, _T]
+		monadic.Data[A, _T]
 	},
-	_E monadic.Nillable](f func(A) B, ma MA) MB {
-	return Bind(ma, func(a A) MB {
-		var mb MB
-		return mb.Init(func() MB {
-			return mb.Pure(f(a))
-		})
-	})
+	_T any,
+](f func(A) B, ma MA) MB {
+	return functor.Map[MB](f, ma)
 }
 
 func LiftM2[
 	MC interface {
-		monadic.Data[C, _E]
-		MonadClass[MC, C, _E]
+		MonadClass[MC, C, _T]
+		applicative.ApplicativeClass[MC, C, _T]
+		functor.FunctorClass[MC, C, _T]
+		monadic.Generalize[MC, C, _T]
+		monadic.Data[C, _T]
 	},
 	A, B, C any,
 	MA interface {
-		monadic.Data[A, _E]
-		MonadClass[MA, A, _E]
+		MonadClass[MA, A, _T]
+		applicative.ApplicativeClass[MA, A, _T]
+		functor.FunctorClass[MA, A, _T]
+		monadic.Generalize[MA, A, _T]
+		monadic.Data[A, _T]
 	},
 	MB interface {
-		monadic.Data[B, _E]
-		MonadClass[MB, B, _E]
+		MonadClass[MB, B, _T]
+		applicative.ApplicativeClass[MB, B, _T]
+		functor.FunctorClass[MB, B, _T]
+		monadic.Generalize[MB, B, _T]
+		monadic.Data[B, _T]
 	},
-	_E monadic.Nillable](f func(A, B) C, ma MA, mb MB) MC {
+	_T any,
+](f func(A, B) C, ma MA, mb MB) MC {
 	return Bind(ma, func(a A) MC {
-		return Bind(mb, func(b B) MC {
-			var mc MC
-			return mc.Init(func() MC {
-				return mc.Pure(f(a, b))
-			})
-		})
+		return LiftM[MC](function.Partial(f, a), mb)
 	})
 }
 
 func LiftM3[
 	MD interface {
-		monadic.Data[D, _E]
-		MonadClass[MD, D, _E]
+		MonadClass[MD, D, _T]
+		applicative.ApplicativeClass[MD, D, _T]
+		functor.FunctorClass[MD, D, _T]
+		monadic.Generalize[MD, D, _T]
+		monadic.Data[D, _T]
 	},
 	A, B, C, D any,
 	MA interface {
-		monadic.Data[A, _E]
-		MonadClass[MA, A, _E]
+		MonadClass[MA, A, _T]
+		applicative.ApplicativeClass[MA, A, _T]
+		functor.FunctorClass[MA, A, _T]
+		monadic.Generalize[MA, A, _T]
+		monadic.Data[A, _T]
 	},
 	MB interface {
-		monadic.Data[B, _E]
-		MonadClass[MB, B, _E]
+		MonadClass[MB, B, _T]
+		applicative.ApplicativeClass[MB, B, _T]
+		functor.FunctorClass[MB, B, _T]
+		monadic.Generalize[MB, B, _T]
+		monadic.Data[B, _T]
 	},
 	MC interface {
-		monadic.Data[C, _E]
-		MonadClass[MC, C, _E]
+		MonadClass[MC, C, _T]
+		applicative.ApplicativeClass[MC, C, _T]
+		functor.FunctorClass[MC, C, _T]
+		monadic.Generalize[MC, C, _T]
+		monadic.Data[C, _T]
 	},
-	_E monadic.Nillable](f func(A, B, C) D, ma MA, mb MB, mc MC) MD {
+	_T any,
+](f func(A, B, C) D, ma MA, mb MB, mc MC) MD {
 	return Bind(ma, func(a A) MD {
-		return Bind(mb, func(b B) MD {
-			return Bind(mc, func(c C) MD {
-				var md MD
-				return md.Init(func() MD {
-					return md.Pure(f(a, b, c))
-				})
-			})
-		})
+		return LiftM2[MD](function.Partial3(f, a), mb, mc)
 	})
 }
 
 func LiftM4[
 	ME interface {
-		monadic.Data[E, _E]
-		MonadClass[ME, E, _E]
+		MonadClass[ME, E, _T]
+		applicative.ApplicativeClass[ME, E, _T]
+		functor.FunctorClass[ME, E, _T]
+		monadic.Generalize[ME, E, _T]
+		monadic.Data[E, _T]
 	},
 	A, B, C, D, E any,
 	MA interface {
-		monadic.Data[A, _E]
-		MonadClass[MA, A, _E]
+		MonadClass[MA, A, _T]
+		applicative.ApplicativeClass[MA, A, _T]
+		functor.FunctorClass[MA, A, _T]
+		monadic.Generalize[MA, A, _T]
+		monadic.Data[A, _T]
 	},
 	MB interface {
-		monadic.Data[B, _E]
-		MonadClass[MB, B, _E]
+		MonadClass[MB, B, _T]
+		applicative.ApplicativeClass[MB, B, _T]
+		functor.FunctorClass[MB, B, _T]
+		monadic.Generalize[MB, B, _T]
+		monadic.Data[B, _T]
 	},
 	MC interface {
-		monadic.Data[C, _E]
-		MonadClass[MC, C, _E]
+		MonadClass[MC, C, _T]
+		applicative.ApplicativeClass[MC, C, _T]
+		functor.FunctorClass[MC, C, _T]
+		monadic.Generalize[MC, C, _T]
+		monadic.Data[C, _T]
 	},
 	MD interface {
-		monadic.Data[D, _E]
-		MonadClass[MD, D, _E]
+		MonadClass[MD, D, _T]
+		applicative.ApplicativeClass[MD, D, _T]
+		functor.FunctorClass[MD, D, _T]
+		monadic.Generalize[MD, D, _T]
+		monadic.Data[D, _T]
 	},
-	_E monadic.Nillable](f func(A, B, C, D) E, ma MA, mb MB, mc MC, md MD) ME {
+	_T any,
+](f func(A, B, C, D) E, ma MA, mb MB, mc MC, md MD) ME {
 	return Bind(ma, func(a A) ME {
-		return Bind(mb, func(b B) ME {
-			return Bind(mc, func(c C) ME {
-				return Bind(md, func(d D) ME {
-					var me ME
-					return me.Init(func() ME {
-						return me.Pure(f(a, b, c, d))
-					})
-				})
-			})
-		})
+		return LiftM3[ME](function.Partial4(f, a), mb, mc, md)
 	})
 }
 
 func LiftM5[
 	MF interface {
-		monadic.Data[F, _E]
-		MonadClass[MF, F, _E]
+		MonadClass[MF, F, _T]
+		applicative.ApplicativeClass[MF, F, _T]
+		functor.FunctorClass[MF, F, _T]
+		monadic.Generalize[MF, F, _T]
+		monadic.Data[F, _T]
 	},
 	A, B, C, D, E, F any,
 	MA interface {
-		monadic.Data[A, _E]
-		MonadClass[MA, A, _E]
+		MonadClass[MA, A, _T]
+		applicative.ApplicativeClass[MA, A, _T]
+		functor.FunctorClass[MA, A, _T]
+		monadic.Generalize[MA, A, _T]
+		monadic.Data[A, _T]
 	},
 	MB interface {
-		monadic.Data[B, _E]
-		MonadClass[MB, B, _E]
+		MonadClass[MB, B, _T]
+		applicative.ApplicativeClass[MB, B, _T]
+		functor.FunctorClass[MB, B, _T]
+		monadic.Generalize[MB, B, _T]
+		monadic.Data[B, _T]
 	},
 	MC interface {
-		monadic.Data[C, _E]
-		MonadClass[MC, C, _E]
+		MonadClass[MC, C, _T]
+		applicative.ApplicativeClass[MC, C, _T]
+		functor.FunctorClass[MC, C, _T]
+		monadic.Generalize[MC, C, _T]
+		monadic.Data[C, _T]
 	},
 	MD interface {
-		monadic.Data[D, _E]
-		MonadClass[MD, D, _E]
+		MonadClass[MD, D, _T]
+		applicative.ApplicativeClass[MD, D, _T]
+		functor.FunctorClass[MD, D, _T]
+		monadic.Generalize[MD, D, _T]
+		monadic.Data[D, _T]
 	},
 	ME interface {
-		monadic.Data[E, _E]
-		MonadClass[ME, E, _E]
+		MonadClass[ME, E, _T]
+		applicative.ApplicativeClass[ME, E, _T]
+		functor.FunctorClass[ME, E, _T]
+		monadic.Generalize[ME, E, _T]
+		monadic.Data[E, _T]
 	},
-	_E monadic.Nillable](f func(A, B, C, D, E) F, ma MA, mb MB, mc MC, md MD, me ME) MF {
+	_T any,
+](f func(A, B, C, D, E) F, ma MA, mb MB, mc MC, md MD, me ME) MF {
 	return Bind(ma, func(a A) MF {
-		return Bind(mb, func(b B) MF {
-			return Bind(mc, func(c C) MF {
-				return Bind(md, func(d D) MF {
-					return Bind(me, func(e E) MF {
-						var mf MF
-						return mf.Init(func() MF {
-							return mf.Pure(f(a, b, c, d, e))
-						})
-					})
-				})
-			})
-		})
+		return LiftM4[MF](function.Partial5(f, a), mb, mc, md, me)
 	})
+}
+
+func Return[
+	M interface {
+		MonadClass[M, A, _T]
+		applicative.ApplicativeClass[M, A, _T]
+		functor.FunctorClass[M, A, _T]
+		monadic.Generalize[M, A, _T]
+		monadic.Data[A, _T]
+	},
+	A any,
+	_T any,
+](a A) M {
+	return monadic.Zero[M]().Pure(a)
 }

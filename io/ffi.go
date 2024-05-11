@@ -9,11 +9,12 @@ import (
 )
 
 func Perform[A any](m IO[A]) (A, error) {
-	r, e := m.Resolve()
-	if !e.IsNil() {
-		return r, e.error
+	r := m.v()
+	zero := monadic.Zero[A]()
+	if result.IsOk(r) {
+		return result.FromOk(zero, r), nil
 	}
-	return r, nil
+	return zero, result.FromFail(nil, r)
 }
 
 func FFISucc(f func()) func() IO[monadic.Void] {

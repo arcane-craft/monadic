@@ -11,11 +11,12 @@ import (
 )
 
 const (
-	monadicPkgPath    = "github.com/arcane-craft/monadic"
-	monadPkgPath      = "github.com/arcane-craft/monadic/monad"
-	implMonadFun      = "ImplMonadDoClass"
-	monadDoFun        = "Do"
-	monadDoExtractFun = "X"
+	monadicPkgPath     = "github.com/arcane-craft/monadic"
+	monadPkgPath       = "github.com/arcane-craft/monadic/monad"
+	applicativePkgPath = "github.com/arcane-craft/monadic/applicative"
+	implMonadFun       = "ImplMonadDoClass"
+	monadDoFun         = "Do"
+	monadDoExtractFun  = "X"
 )
 
 type MonadTypeInspector struct {

@@ -23,7 +23,7 @@ func TestGenerate(t *testing.T) {
 		for _, info := range files {
 			func() {
 				ext := filepath.Ext(info.Path)
-				file, err := os.OpenFile(strings.TrimSuffix(info.Path, ext)+"_desugar"+ext, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
+				file, err := os.OpenFile(strings.TrimSuffix(info.Path, ext)+"_monadic_prod"+ext, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
 				if err != nil {
 					t.Errorf("os.Open() failed: %s", err)
 					return

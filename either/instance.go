@@ -1,36 +1,69 @@
 package either
 
 import (
-	"github.com/arcane-craft/monadic/monad"
+	"github.com/arcane-craft/monadic"
 )
 
-func (m Either[A, B]) Resolve() (B, eType[A]) {
-	var zeroA A
-	var zeroB B
-	var e eType[A]
-	if m.left == nil && m.right == nil {
-		return zeroB, e
+func (Either[A, B]) Concretize(o monadic.Data[any, aType[A]]) Either[A, B] {
+	oi := o.(Either[A, any])
+	if IsRight(oi) {
+		return Right[A]((*oi.right).(B))
 	}
-	if IsLeft(m) {
-		left := FromLeft(zeroA, m)
-		e.e = &left
-		return zeroB, e
-	}
-	return FromRight(zeroB, m), e
+	return Left[B](*oi.left)
 }
 
-func (Either[A, B]) Throw(e eType[A]) Either[A, B] {
-	return Left[B](*e.e)
+func (Either[A, B]) Abstract(o Either[A, B]) monadic.Data[any, aType[A]] {
+	if IsRight(o) {
+		return Right[A](any(*o.right))
+	}
+	return Left[any](*o.left)
 }
 
-func (Either[A, B]) Init(f func() Either[A, B]) Either[A, B] {
-	return f()
+func (Either[A, B]) Map(m func(B) any, fa Either[A, B]) monadic.Data[any, aType[A]] {
+	if IsLeft(fa) {
+		return Left[any](*fa.left)
+	}
+	return Right[A](m(*fa.right))
 }
 
 func (Either[A, B]) Pure(b B) Either[A, B] {
 	return Right[A](b)
 }
 
+func (Either[A, B]) Apply(fm monadic.Data[func(B) any, aType[A]], fa Either[A, B]) monadic.Data[any, aType[A]] {
+	fmi := fm.(rEither[A, func(B) any, aType[A]])
+	if fmi.left != nil {
+		return Left[any](*fmi.left)
+	}
+	if fmi.right != nil && fa.right != nil {
+		return Right[A]((*fmi.right)(*fa.right))
+	}
+	return Left[any](*fa.left)
+}
+
+func (Either[A, B]) Bind(ma Either[A, B], mm func(B) monadic.Data[any, aType[A]]) monadic.Data[any, aType[A]] {
+	if IsRight(ma) {
+		return mm(*ma.right)
+	}
+	return Left[any](*ma.left)
+}
+
+func (Either[A, B]) Do(proc func() Either[A, B]) (ret Either[A, B]) {
+	defer func() {
+		e := recover()
+		if a, ok := e.(aType[A]); ok {
+			ret = Left[B](a.e)
+			return
+		}
+		panic(e)
+	}()
+	ret = proc()
+	return
+}
+
 func (m Either[A, B]) X() B {
-	return monad.X(m)
+	if IsRight(m) {
+		return *m.right
+	}
+	panic(aType[A]{*m.left})
 }

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"os"
@@ -42,11 +43,10 @@ func main() {
 		for _, info := range files {
 			func() {
 				ext := filepath.Ext(info.Path)
-				newFile := strings.TrimSuffix(info.Path, ext) + "_desugar" + ext
+				newFile := strings.TrimSuffix(info.Path, ext) + "_monadic_prod" + ext
 				file, err := os.OpenFile(newFile, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
 				if err != nil {
 					fmt.Println("open file", newFile, "failed:", err)
-					os.Exit(2)
 					return
 				}
 				defer file.Close()
@@ -54,13 +54,27 @@ func main() {
 				err = Generate(info, file)
 				if err != nil {
 					fmt.Println("generate code of", info.Path, "failed:", err)
-					os.Exit(2)
 					return
 				}
-				err = os.Rename(info.Path, info.Path+".origin")
+				buf := bytes.NewBuffer(nil)
+				buf.Write([]byte(GenBuildFlags(true)))
+				bs, err := os.ReadFile(info.Path)
 				if err != nil {
-					fmt.Println("rename origin code file", info.Path, "failed:", err)
-					os.Exit(2)
+					fmt.Println("read file", info.Path, "failed:", err)
+					return
+				}
+				buf.Write(bs)
+				tmpOldFileNam := info.Path + ".old"
+				if err := os.WriteFile(tmpOldFileNam, buf.Bytes(), 0644); err != nil {
+					fmt.Println("write file", tmpOldFileNam, "failed:", err)
+					return
+				}
+				if err := os.Remove(info.Path); err != nil {
+					fmt.Println("remove file", info.Path, "failed:", err)
+					return
+				}
+				if err := os.Rename(tmpOldFileNam, info.Path); err != nil {
+					fmt.Println("rename file", tmpOldFileNam, "failed:", err)
 					return
 				}
 			}()
