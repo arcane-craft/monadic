@@ -4,6 +4,7 @@ import (
 	"context"
 	"go/parser"
 	"log"
+	"path"
 	"reflect"
 	"testing"
 )
@@ -52,10 +53,13 @@ func TestInspectDoSyntax(t *testing.T) {
 }
 
 func TestParser(t *testing.T) {
-	expr, err := parser.ParseExpr("_A + _B")
+	str := `"github.com/github.com/arcane-craft/monadic/io".IO["github.com/arcane-craft/monadic".Unit]`
+	expr, err := parser.ParseExpr(str)
 	if err != nil {
 		t.Error(err)
 		return
 	}
 	t.Logf("%s: %+v", reflect.TypeOf(expr), expr)
+
+	t.Logf("pkgNam: %s", path.Base(str))
 }

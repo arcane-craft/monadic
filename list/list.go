@@ -1,6 +1,9 @@
 package list
 
 import (
+	"github.com/arcane-craft/monadic/algebra"
+	"github.com/arcane-craft/monadic/bools"
+	"github.com/arcane-craft/monadic/foldable"
 	"github.com/arcane-craft/monadic/monad"
 )
 
@@ -22,4 +25,14 @@ func L[A any](a ...A) List[A] {
 	return append(make(List[A], 0, len(a)), a...)
 }
 
-var _ = monad.ImplMonadDoClass[List[any]]()
+func IsCons[A any](l List[A]) bools.Bool {
+	return len(l) > 0
+}
+
+func IsNil[A any](l List[A]) bools.Bool {
+	return len(l) <= 0
+}
+
+var _ = monad.ImplMonadDo[List[any]]()
+var _ = algebra.ImplMonoid[List[any]]()
+var _ = foldable.ImplFoldable[List[any]]()

@@ -1,5 +1,7 @@
 package function
 
+import "github.com/arcane-craft/monadic/lazy"
+
 func Apply[A, B any](f func(A) B, a A) B {
 	return f(a)
 }
@@ -18,6 +20,36 @@ func Apply4[A, B, C, D, E any](f func(A, B, C, D) E, a A, b B, c C, d D) E {
 
 func Apply5[A, B, C, D, E, F any](f func(A, B, C, D, E) F, a A, b B, c C, d D, e E) F {
 	return f(a, b, c, d, e)
+}
+
+func LazyApply[A, B any](f func(A) B, a A) lazy.Value[B] {
+	return lazy.New(func() B {
+		return f(a)
+	})
+}
+
+func LazyApply2[A, B, C any](f func(A, B) C, a A, b B) lazy.Value[C] {
+	return lazy.New(func() C {
+		return f(a, b)
+	})
+}
+
+func LazyApply3[A, B, C, D any](f func(A, B, C) D, a A, b B, c C) lazy.Value[D] {
+	return lazy.New(func() D {
+		return f(a, b, c)
+	})
+}
+
+func LazyApply4[A, B, C, D, E any](f func(A, B, C, D) E, a A, b B, c C, d D) lazy.Value[E] {
+	return lazy.New(func() E {
+		return f(a, b, c, d)
+	})
+}
+
+func LazyApply5[A, B, C, D, E, F any](f func(A, B, C, D, E) F, a A, b B, c C, d D, e E) lazy.Value[F] {
+	return lazy.New(func() F {
+		return f(a, b, c, d, e)
+	})
 }
 
 func Partial[A, B, C any](f func(A, B) C, a A) func(B) C {

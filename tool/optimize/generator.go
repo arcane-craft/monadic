@@ -105,7 +105,10 @@ func Generate(info *FileInfo, writer io.Writer) error {
 	for _, s := range info.Syntax {
 		slices.Reverse(s.Block)
 		var lastStmts []string
-		var finalInstanceType string
+		finalInstanceType, err := readExtent(file, s.RetType)
+		if err != nil {
+			return fmt.Errorf("readExtent() failed: %w", err)
+		}
 		for _, b := range s.Block {
 			contBlock, err := readExtentList(file, b.PreStmts)
 			if err != nil {
@@ -118,17 +121,11 @@ func Generate(info *FileInfo, writer io.Writer) error {
 				}
 				var operation string
 				if b.ReturnVar != nil {
-					pkgPath := GetPkgPathFromTypeStr(b.ReturnVar.Type)
-					varType := b.ReturnVar.Type
-					if pkgPath == info.PkgPath {
-						varType = ResetTypePkgNameStr(b.ReturnVar.Type, "")
-					} else if len(pkgPath) > 0 {
-						pkgName, ok := info.Imports[pkgPath]
-						if !ok {
-							pkgName = GetRandPkgName()
-							addImports[pkgPath] = pkgName
+					varType, adds := ResetTypeStrPkgName(b.ReturnVar.Type, info.Imports, info.PkgPath)
+					if len(adds) > 0 {
+						for k, v := range adds {
+							addImports[k] = v
 						}
-						varType = ResetTypePkgNameStr(b.ReturnVar.Type, pkgName)
 					}
 					operation = GenReturn(GenBind(monadPkgName, str, GenBindBlock(b.ReturnVar.Name, varType, finalInstanceType, lastStmts)))
 				} else {
@@ -137,19 +134,6 @@ func Generate(info *FileInfo, writer io.Writer) error {
 				contBlock = append(contBlock, operation)
 			}
 			lastStmts = contBlock
-			if len(finalInstanceType) == 0 {
-				pkgPath := GetPkgPathFromTypeStr(b.InstanceType)
-				finalInstanceType = b.InstanceType
-				if pkgPath == info.PkgPath {
-					finalInstanceType = ResetTypePkgNameStr(b.InstanceType, "")
-				} else if len(pkgPath) > 0 {
-					pkgName, ok := info.Imports[pkgPath]
-					if !ok {
-						return fmt.Errorf("expect import '%s' not found", pkgPath)
-					}
-					finalInstanceType = ResetTypePkgNameStr(b.InstanceType, pkgName)
-				}
-			}
 		}
 		blocks = append(blocks, &ReplaceBlock{
 			Old: s.Extent,
@@ -163,7 +147,13 @@ func Generate(info *FileInfo, writer io.Writer) error {
 	if _, err := writer.Write([]byte(GenBuildFlags(false))); err != nil {
 		return fmt.Errorf("writer.Write() failed: %w", err)
 	}
-	if _, err := io.CopyN(writer, file, int64(info.ImportExtent.End.Offset+1)); err != nil {
+	if info.BuildFlag != nil {
+		_, err := file.Seek(int64(info.BuildFlag.End.Offset+2), io.SeekStart)
+		if err != nil {
+			return fmt.Errorf("file.Seek() failed: %w", err)
+		}
+	}
+	if _, err := io.CopyN(writer, file, int64(info.ImportExtent.End.Offset-info.BuildFlag.End.Offset-1)); err != nil {
 		return fmt.Errorf("io.CopyN() failed: %w", err)
 	}
 	for p, n := range addImports {

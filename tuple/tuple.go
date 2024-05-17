@@ -1,22 +1,8 @@
 package tuple
 
-type Tuple[A any] func() A
+type Tuple[A, B any] func() (A, B)
 
-func T[A any](a A) Tuple[A] {
-	return func() A {
-		return a
-	}
-}
-
-func Map[A, Ap any](m func(A) Ap, fa Tuple[A]) Tuple[Ap] {
-	return func() Ap {
-		return m(fa())
-	}
-}
-
-type Tuple2[A, B any] func() (A, B)
-
-func T2[A, B any](a A, b B) Tuple2[A, B] {
+func T[A, B any](a A, b B) Tuple[A, B] {
 	return func() (A, B) {
 		return a, b
 	}
@@ -30,7 +16,7 @@ func T2nd[A, B any](_ A, b B) B {
 	return b
 }
 
-func Map2[A, B, Ap, Bp any](m func(A, B) (Ap, Bp), fa Tuple2[A, B]) Tuple2[Ap, Bp] {
+func Map2[A, B, Ap, Bp any](m func(A, B) (Ap, Bp), fa Tuple[A, B]) Tuple[Ap, Bp] {
 	return func() (Ap, Bp) {
 		return m(fa())
 	}

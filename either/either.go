@@ -1,7 +1,9 @@
 package either
 
 import (
+	"github.com/arcane-craft/monadic/bools"
 	"github.com/arcane-craft/monadic/function"
+	"github.com/arcane-craft/monadic/lazy"
 	"github.com/arcane-craft/monadic/monad"
 )
 
@@ -28,26 +30,26 @@ func Right[A, B any](v B) Either[A, B] {
 	}
 }
 
-func IsLeft[A, B any](e Either[A, B]) bool {
+func IsLeft[A, B any](e Either[A, B]) bools.Bool {
 	return e.left != nil
 }
 
-func IsRight[A, B any](e Either[A, B]) bool {
+func IsRight[A, B any](e Either[A, B]) bools.Bool {
 	return e.right != nil
 }
 
-func FromLeft[A, B any](a A, e Either[A, B]) A {
+func FromLeft[A, B any](a lazy.Value[A], e Either[A, B]) A {
 	if e.left != nil {
 		return *e.left
 	}
-	return a
+	return a()
 }
 
-func FromRight[A, B any](b B, e Either[A, B]) B {
+func FromRight[A, B any](b lazy.Value[B], e Either[A, B]) B {
 	if e.right != nil {
 		return *e.right
 	}
-	return b
+	return b()
 }
 
 func EitherOf[A, B, C any](left func(A) C, right func(B) C, e Either[A, B]) C {
@@ -57,7 +59,7 @@ func EitherOf[A, B, C any](left func(A) C, right func(B) C, e Either[A, B]) C {
 	return right(*e.right)
 }
 
-func Swap[A, B any](e Either[A, B]) Either[B, A] {
+func Mirror[A, B any](e Either[A, B]) Either[B, A] {
 	return EitherOf(Right[B, A], Left[A, B], e)
 }
 
@@ -69,4 +71,4 @@ func MapRight[A, B, C any](m func(B) C, fa Either[A, B]) Either[A, C] {
 	return EitherOf(Left[C, A], function.Compose(Right[A, C], m), fa)
 }
 
-var _ = monad.ImplMonadDoClass[Either[any, any]]()
+var _ = monad.ImplMonadDo[Either[any, any]]()

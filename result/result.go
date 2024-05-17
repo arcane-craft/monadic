@@ -3,7 +3,9 @@ package result
 import (
 	"fmt"
 
+	"github.com/arcane-craft/monadic/bools"
 	"github.com/arcane-craft/monadic/either"
+	"github.com/arcane-craft/monadic/lazy"
 )
 
 func Fail[A any](err error) either.Either[error, A] {
@@ -14,19 +16,19 @@ func Ok[A any](v A) either.Either[error, A] {
 	return either.Right[error](v)
 }
 
-func IsFail[A any](e either.Either[error, A]) bool {
+func IsFail[A any](e either.Either[error, A]) bools.Bool {
 	return either.IsLeft(e)
 }
 
-func IsOk[A any](e either.Either[error, A]) bool {
+func IsOk[A any](e either.Either[error, A]) bools.Bool {
 	return either.IsRight(e)
 }
 
-func FromFail[A any](err error, e either.Either[error, A]) error {
+func FromFail[A any](err lazy.Value[error], e either.Either[error, A]) error {
 	return either.FromLeft(err, e)
 }
 
-func FromOk[A any](b A, e either.Either[error, A]) A {
+func FromOk[A any](b lazy.Value[A], e either.Either[error, A]) A {
 	return either.FromRight(b, e)
 }
 

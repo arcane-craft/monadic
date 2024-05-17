@@ -57,7 +57,9 @@ func main() {
 					return
 				}
 				buf := bytes.NewBuffer(nil)
-				buf.Write([]byte(GenBuildFlags(true)))
+				if info.BuildFlag == nil {
+					buf.Write([]byte(GenBuildFlags(true)))
+				}
 				bs, err := os.ReadFile(info.Path)
 				if err != nil {
 					fmt.Println("read file", info.Path, "failed:", err)

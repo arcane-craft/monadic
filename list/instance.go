@@ -1,6 +1,12 @@
 package list
 
-import "github.com/arcane-craft/monadic"
+import (
+	"github.com/arcane-craft/monadic"
+)
+
+func (List[A]) Kind() aType {
+	return aType{}
+}
 
 func (List[A]) Concretize(o monadic.Data[any, aType]) List[A] {
 	oi := o.(List[any])
@@ -31,12 +37,12 @@ func (List[A]) Pure(a A) List[A] {
 	return List[A]{a}
 }
 
-func (List[A]) Apply(fm monadic.Data[func(A) any, aType], fa List[A]) monadic.Data[any, aType] {
-	fmi := fm.(rList[func(A) any, aType])
-	ret := make(List[any], 0, len(fmi)+len(fa))
-	for _, m := range fmi {
-		for _, a := range fa {
-			ret = append(ret, m(a))
+func (List[A]) LiftA2(f func(A, any) any, a List[A], b monadic.Data[any, aType]) monadic.Data[any, aType] {
+	bb := b.(List[any])
+	ret := make(List[any], 0, len(a)+len(bb))
+	for _, ea := range a {
+		for _, eb := range bb {
+			ret = append(ret, f(ea, eb))
 		}
 	}
 	return ret
@@ -62,9 +68,25 @@ func (List[A]) Bind(ma List[A], mm func(A) monadic.Data[any, aType]) monadic.Dat
 }
 
 func (List[A]) Do(proc func() List[A]) List[A] {
-	panic("not support for testing, please optimize first")
+	panic(monadic.NotSupportForTest)
 }
 
 func (m List[A]) X() A {
-	panic("not support for testing, please optimize first")
+	panic(monadic.NotSupportForTest)
+}
+
+func (List[A]) Append(a List[A], b List[A]) List[A] {
+	return append(append(make(List[A], 0, len(a)+len(b)), a...), b...)
+}
+
+func (List[A]) Neutral() List[A] {
+	return List[A]{}
+}
+
+func (List[A]) Foldr(f func(A, any) any, init any, input List[A]) any {
+	ret := init
+	for _, x := range input {
+		ret = f(x, ret)
+	}
+	return ret
 }

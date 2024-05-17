@@ -1,4 +1,4 @@
-package monadic
+package basics
 
 func Zero[A any]() A {
 	var zero A

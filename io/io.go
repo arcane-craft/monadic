@@ -2,9 +2,11 @@ package io
 
 import (
 	"github.com/arcane-craft/monadic/applicative"
+	"github.com/arcane-craft/monadic/basics"
 	"github.com/arcane-craft/monadic/either"
 	"github.com/arcane-craft/monadic/lazy"
 	"github.com/arcane-craft/monadic/monad"
+	"github.com/arcane-craft/monadic/result"
 )
 
 type aType struct{}
@@ -30,4 +32,12 @@ func CatchIO[A any](m IO[A], h func(error) IO[A]) IO[A] {
 	})
 }
 
-var _ = monad.ImplMonadDoClass[IO[any]]()
+func Perform[A any](m IO[A]) (A, error) {
+	r := m.v()
+	if result.IsOk(r) {
+		return result.FromOk(nil, r), nil
+	}
+	return basics.Zero[A](), result.FromFail(nil, r)
+}
+
+var _ = monad.ImplMonadDo[IO[any]]()

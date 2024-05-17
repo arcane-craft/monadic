@@ -14,7 +14,7 @@ const (
 	monadicPkgPath     = "github.com/arcane-craft/monadic"
 	monadPkgPath       = "github.com/arcane-craft/monadic/monad"
 	applicativePkgPath = "github.com/arcane-craft/monadic/applicative"
-	implMonadFun       = "ImplMonadDoClass"
+	implMonadFun       = "ImplMonadDo"
 	monadDoFun         = "Do"
 	monadDoExtractFun  = "X"
 )
@@ -79,9 +79,15 @@ func (i *MonadTypeInspector) InspectMonadTypes() []*MonadInstanceType {
 							if ok {
 								switch fun := index.X.(type) {
 								case *ast.Ident:
-									ret = append(ret, i.inspectMonadImpl(fun, index.Index))
+									inst := i.inspectMonadImpl(fun, index.Index)
+									if inst != nil {
+										ret = append(ret, inst)
+									}
 								case *ast.SelectorExpr:
-									ret = append(ret, i.inspectMonadImpl(fun.Sel, index.Index))
+									inst := i.inspectMonadImpl(fun.Sel, index.Index)
+									if inst != nil {
+										ret = append(ret, inst)
+									}
 								}
 							}
 						}
@@ -98,12 +104,25 @@ type MonadDoSyntaxInspector struct {
 	instanceTypes map[string]*MonadInstanceType
 	imports       map[string]map[string]string
 	importExtents map[string]Extent
+	buildFlags    map[string]Extent
 }
 
 func NewMonadDoSyntaxInspector(pkg *packages.Package, instances []*MonadInstanceType) *MonadDoSyntaxInspector {
 	imports := make(map[string]map[string]string)
 	importExtents := make(map[string]Extent)
+	buildFlags := make(map[string]Extent)
 	for _, file := range pkg.Syntax {
+		for _, cg := range file.Comments {
+			for _, c := range cg.List {
+				if strings.Contains(c.Text, "//go:build !monadic_production") {
+					fileName := pkg.Fset.Position(c.Pos()).Filename
+					buildFlags[fileName] = Extent{
+						Start: pkg.Fset.Position(c.Pos()),
+						End:   pkg.Fset.Position(c.End()),
+					}
+				}
+			}
+		}
 		specs := make(map[string]string)
 		pkgEndPos := pkg.Fset.Position(file.Name.End())
 		importExtents[pkgEndPos.Filename] = Extent{
@@ -133,6 +152,7 @@ func NewMonadDoSyntaxInspector(pkg *packages.Package, instances []*MonadInstance
 		instanceTypes: instanceTypes,
 		imports:       imports,
 		importExtents: importExtents,
+		buildFlags:    buildFlags,
 	}
 }
 
@@ -155,11 +175,13 @@ type MonadStmt struct {
 
 type MonadDoSyntax struct {
 	Extent
-	Block []*MonadStmt
+	Block   []*MonadStmt
+	RetType Extent
 }
 
 type FileInfo struct {
 	Path         string
+	BuildFlag    *Extent
 	PkgPath      string
 	Imports      map[string]string
 	ImportExtent Extent
@@ -236,7 +258,11 @@ func (i *MonadDoSyntaxInspector) inspectDoBlock(block *ast.BlockStmt) []*MonadSt
 	return append(monadStmts, ms)
 }
 
-func (i *MonadDoSyntaxInspector) inspectDoFunCall(funExpr ast.Expr, args []ast.Expr) []*MonadStmt {
+func (i *MonadDoSyntaxInspector) inspectDoFunCall(funExpr ast.Expr, args []ast.Expr) ([]*MonadStmt, Extent) {
+	var (
+		stmts   []*MonadStmt
+		retType Extent
+	)
 	var isDoFunCall bool
 	switch fun := funExpr.(type) {
 	case *ast.Ident:
@@ -244,17 +270,24 @@ func (i *MonadDoSyntaxInspector) inspectDoFunCall(funExpr ast.Expr, args []ast.E
 	case *ast.SelectorExpr:
 		isDoFunCall = i.isMonadDoFun(fun.Sel)
 	case *ast.IndexExpr:
-		i.inspectDoFunCall(fun.X, args)
+		s, r := i.inspectDoFunCall(fun.X, args)
+		stmts = append(stmts, s...)
+		retType = r
 	}
 	if isDoFunCall {
 		if len(args) == 1 {
 			funLit, ok := args[0].(*ast.FuncLit)
 			if ok {
-				return i.inspectDoBlock(funLit.Body)
+				retType = Extent{
+					Start: i.pkg.Fset.Position(funLit.Type.Results.Pos()),
+					End:   i.pkg.Fset.Position(funLit.Type.Results.End()),
+				}
+				stmts = append(stmts, i.inspectDoBlock(funLit.Body)...)
+				return stmts, retType
 			}
 		}
 	}
-	return nil
+	return stmts, retType
 }
 
 func (i *MonadDoSyntaxInspector) InspectDoSyntax() []*FileInfo {
@@ -275,7 +308,7 @@ func (i *MonadDoSyntaxInspector) InspectDoSyntax() []*FileInfo {
 				}
 			}
 		case *ast.CallExpr:
-			block := i.inspectDoFunCall(node.Fun, node.Args)
+			block, retType := i.inspectDoFunCall(node.Fun, node.Args)
 			if len(block) > 0 {
 				fileName := i.pkg.Fset.Position(n.Pos()).Filename
 				file := fileMap[fileName]
@@ -293,13 +326,17 @@ func (i *MonadDoSyntaxInspector) InspectDoSyntax() []*FileInfo {
 						Start: i.pkg.Fset.Position(node.Pos()),
 						End:   i.pkg.Fset.Position(node.End()),
 					},
-					Block: block,
+					Block:   block,
+					RetType: retType,
 				})
 			}
 		}
 	})
 	var ret []*FileInfo
 	for _, f := range fileMap {
+		if extent, ok := i.buildFlags[f.Path]; ok {
+			f.BuildFlag = &extent
+		}
 		ret = append(ret, f)
 	}
 	return ret

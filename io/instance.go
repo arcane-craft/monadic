@@ -5,22 +5,27 @@ import (
 
 	"github.com/arcane-craft/monadic"
 	"github.com/arcane-craft/monadic/applicative"
+	"github.com/arcane-craft/monadic/basics"
 	"github.com/arcane-craft/monadic/either"
 	"github.com/arcane-craft/monadic/functor"
 	"github.com/arcane-craft/monadic/monad"
 	"github.com/arcane-craft/monadic/result"
 )
 
+func (IO[A]) Kind() aType {
+	return aType{}
+}
+
 func (IO[A]) Concretize(o monadic.Data[any, aType]) IO[A] {
 	oi := o.(IO[any])
 	return New(func() either.Either[error, A] {
-		return monadic.Zero[either.Either[error, A]]().Concretize(oi.v())
+		return basics.Zero[either.Either[error, A]]().Concretize(oi.v())
 	})
 }
 
 func (IO[A]) Abstract(o IO[A]) monadic.Data[any, aType] {
 	return New(func() either.Either[error, any] {
-		return monadic.Zero[either.Either[error, A]]().Abstract(o.v()).(either.Either[error, any])
+		return basics.Zero[either.Either[error, A]]().Abstract(o.v()).(either.Either[error, any])
 	})
 }
 
@@ -36,10 +41,10 @@ func (IO[A]) Pure(a A) IO[A] {
 	})
 }
 
-func (IO[A]) Apply(fm monadic.Data[func(A) any, aType], fa IO[A]) monadic.Data[any, aType] {
+func (IO[A]) LiftA2(f func(A, any) any, a IO[A], b monadic.Data[any, aType]) monadic.Data[any, aType] {
 	return New(func() either.Either[error, any] {
-		fmi := fm.(rIO[func(A) any, aType])
-		return applicative.Apply[either.Either[error, any]](fmi.v(), fa.v())
+		eb := b.(IO[any])
+		return applicative.LiftA2[either.Either[error, any]](f, a.v(), eb.v())
 	})
 }
 
@@ -65,7 +70,7 @@ func (IO[A]) Bind(ma IO[A], mm func(A) monadic.Data[any, aType]) monadic.Data[an
 
 func (IO[A]) Do(proc func() IO[A]) IO[A] {
 	return New(func() either.Either[error, A] {
-		return monadic.Zero[either.Either[error, A]]().Do(func() either.Either[error, A] {
+		return basics.Zero[either.Either[error, A]]().Do(func() either.Either[error, A] {
 			return proc().v()
 		})
 	})
