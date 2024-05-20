@@ -8,7 +8,7 @@ import (
 	"github.com/arcane-craft/monadic/tuple"
 )
 
-func FFINoE(f func()) func() IO[monadic.Unit] {
+func LiftFNoE(f func()) func() IO[monadic.Unit] {
 	return func() IO[monadic.Unit] {
 		return IO[monadic.Unit]{
 			v: lazy.New(func() either.Either[error, monadic.Unit] {
@@ -19,7 +19,7 @@ func FFINoE(f func()) func() IO[monadic.Unit] {
 	}
 }
 
-func FFI1PNoE[P any](f func(P)) func(P) IO[monadic.Unit] {
+func LiftF1PNoE[P any](f func(P)) func(P) IO[monadic.Unit] {
 	return func(p P) IO[monadic.Unit] {
 		return IO[monadic.Unit]{
 			v: lazy.New(func() either.Either[error, monadic.Unit] {
@@ -30,7 +30,7 @@ func FFI1PNoE[P any](f func(P)) func(P) IO[monadic.Unit] {
 	}
 }
 
-func FFI2PNoE[P1, P2 any](f func(P1, P2)) func(P1, P2) IO[monadic.Unit] {
+func LiftF2PNoE[P1, P2 any](f func(P1, P2)) func(P1, P2) IO[monadic.Unit] {
 	return func(p1 P1, p2 P2) IO[monadic.Unit] {
 		return IO[monadic.Unit]{
 			v: lazy.New(func() either.Either[error, monadic.Unit] {
@@ -41,7 +41,7 @@ func FFI2PNoE[P1, P2 any](f func(P1, P2)) func(P1, P2) IO[monadic.Unit] {
 	}
 }
 
-func FFI3PNoE[P1, P2, P3 any](f func(P1, P2, P3)) func(P1, P2, P3) IO[monadic.Unit] {
+func LiftF3PNoE[P1, P2, P3 any](f func(P1, P2, P3)) func(P1, P2, P3) IO[monadic.Unit] {
 	return func(p1 P1, p2 P2, p3 P3) IO[monadic.Unit] {
 		return IO[monadic.Unit]{
 			v: lazy.New(func() either.Either[error, monadic.Unit] {
@@ -52,7 +52,7 @@ func FFI3PNoE[P1, P2, P3 any](f func(P1, P2, P3)) func(P1, P2, P3) IO[monadic.Un
 	}
 }
 
-func FFI4PNoE[P1, P2, P3, P4 any](f func(P1, P2, P3, P4)) func(P1, P2, P3, P4) IO[monadic.Unit] {
+func LiftF4PNoE[P1, P2, P3, P4 any](f func(P1, P2, P3, P4)) func(P1, P2, P3, P4) IO[monadic.Unit] {
 	return func(p1 P1, p2 P2, p3 P3, p4 P4) IO[monadic.Unit] {
 		return IO[monadic.Unit]{
 			v: lazy.New(func() either.Either[error, monadic.Unit] {
@@ -63,7 +63,7 @@ func FFI4PNoE[P1, P2, P3, P4 any](f func(P1, P2, P3, P4)) func(P1, P2, P3, P4) I
 	}
 }
 
-func FFI5PNoE[P1, P2, P3, P4, P5 any](f func(P1, P2, P3, P4, P5)) func(P1, P2, P3, P4, P5) IO[monadic.Unit] {
+func LiftF5PNoE[P1, P2, P3, P4, P5 any](f func(P1, P2, P3, P4, P5)) func(P1, P2, P3, P4, P5) IO[monadic.Unit] {
 	return func(p1 P1, p2 P2, p3 P3, p4 P4, p5 P5) IO[monadic.Unit] {
 		return IO[monadic.Unit]{
 			v: lazy.New(func() either.Either[error, monadic.Unit] {
@@ -74,7 +74,7 @@ func FFI5PNoE[P1, P2, P3, P4, P5 any](f func(P1, P2, P3, P4, P5)) func(P1, P2, P
 	}
 }
 
-func FFIVarPNoE[P any](f func(...P)) func(...P) IO[monadic.Unit] {
+func LiftFVarPNoE[P any](f func(...P)) func(...P) IO[monadic.Unit] {
 	return func(ps ...P) IO[monadic.Unit] {
 		return IO[monadic.Unit]{
 			v: lazy.New(func() either.Either[error, monadic.Unit] {
@@ -85,7 +85,7 @@ func FFIVarPNoE[P any](f func(...P)) func(...P) IO[monadic.Unit] {
 	}
 }
 
-func FFI1PVarPNoE[P, VP any](f func(P, ...VP)) func(P, ...VP) IO[monadic.Unit] {
+func LiftF1PVarPNoE[P, VP any](f func(P, ...VP)) func(P, ...VP) IO[monadic.Unit] {
 	return func(p P, v ...VP) IO[monadic.Unit] {
 		return IO[monadic.Unit]{
 			v: lazy.New(func() either.Either[error, monadic.Unit] {
@@ -96,7 +96,7 @@ func FFI1PVarPNoE[P, VP any](f func(P, ...VP)) func(P, ...VP) IO[monadic.Unit] {
 	}
 }
 
-func FFI2PVarPNoE[P1, P2, VP any](f func(P1, P2, ...VP)) func(P1, P2, ...VP) IO[monadic.Unit] {
+func LiftF2PVarPNoE[P1, P2, VP any](f func(P1, P2, ...VP)) func(P1, P2, ...VP) IO[monadic.Unit] {
 	return func(p1 P1, p2 P2, v ...VP) IO[monadic.Unit] {
 		return IO[monadic.Unit]{
 			v: lazy.New(func() either.Either[error, monadic.Unit] {
@@ -107,7 +107,7 @@ func FFI2PVarPNoE[P1, P2, VP any](f func(P1, P2, ...VP)) func(P1, P2, ...VP) IO[
 	}
 }
 
-func FFI(f func() error) func() IO[monadic.Unit] {
+func LiftF(f func() error) func() IO[monadic.Unit] {
 	return func() IO[monadic.Unit] {
 		return IO[monadic.Unit]{
 			v: lazy.New(func() either.Either[error, monadic.Unit] {
@@ -120,7 +120,7 @@ func FFI(f func() error) func() IO[monadic.Unit] {
 	}
 }
 
-func FFI1P[P any](f func(P) error) func(P) IO[monadic.Unit] {
+func LiftF1P[P any](f func(P) error) func(P) IO[monadic.Unit] {
 	return func(p P) IO[monadic.Unit] {
 		return IO[monadic.Unit]{
 			v: lazy.New(func() either.Either[error, monadic.Unit] {
@@ -133,7 +133,7 @@ func FFI1P[P any](f func(P) error) func(P) IO[monadic.Unit] {
 	}
 }
 
-func FFI2P[P1, P2 any](f func(P1, P2) error) func(P1, P2) IO[monadic.Unit] {
+func LiftF2P[P1, P2 any](f func(P1, P2) error) func(P1, P2) IO[monadic.Unit] {
 	return func(p1 P1, p2 P2) IO[monadic.Unit] {
 		return IO[monadic.Unit]{
 			v: lazy.New(func() either.Either[error, monadic.Unit] {
@@ -146,7 +146,7 @@ func FFI2P[P1, P2 any](f func(P1, P2) error) func(P1, P2) IO[monadic.Unit] {
 	}
 }
 
-func FFI3P[P1, P2, P3 any](f func(P1, P2, P3) error) func(P1, P2, P3) IO[monadic.Unit] {
+func LiftF3P[P1, P2, P3 any](f func(P1, P2, P3) error) func(P1, P2, P3) IO[monadic.Unit] {
 	return func(p1 P1, p2 P2, p3 P3) IO[monadic.Unit] {
 		return IO[monadic.Unit]{
 			v: lazy.New(func() either.Either[error, monadic.Unit] {
@@ -159,7 +159,7 @@ func FFI3P[P1, P2, P3 any](f func(P1, P2, P3) error) func(P1, P2, P3) IO[monadic
 	}
 }
 
-func FFI4P[P1, P2, P3, P4 any](f func(P1, P2, P3, P4) error) func(P1, P2, P3, P4) IO[monadic.Unit] {
+func LiftF4P[P1, P2, P3, P4 any](f func(P1, P2, P3, P4) error) func(P1, P2, P3, P4) IO[monadic.Unit] {
 	return func(p1 P1, p2 P2, p3 P3, p4 P4) IO[monadic.Unit] {
 		return IO[monadic.Unit]{
 			v: lazy.New(func() either.Either[error, monadic.Unit] {
@@ -172,7 +172,7 @@ func FFI4P[P1, P2, P3, P4 any](f func(P1, P2, P3, P4) error) func(P1, P2, P3, P4
 	}
 }
 
-func FFI5P[P1, P2, P3, P4, P5 any](f func(P1, P2, P3, P4, P5) error) func(P1, P2, P3, P4, P5) IO[monadic.Unit] {
+func LiftF5P[P1, P2, P3, P4, P5 any](f func(P1, P2, P3, P4, P5) error) func(P1, P2, P3, P4, P5) IO[monadic.Unit] {
 	return func(p1 P1, p2 P2, p3 P3, p4 P4, p5 P5) IO[monadic.Unit] {
 		return IO[monadic.Unit]{
 			v: lazy.New(func() either.Either[error, monadic.Unit] {
@@ -185,7 +185,7 @@ func FFI5P[P1, P2, P3, P4, P5 any](f func(P1, P2, P3, P4, P5) error) func(P1, P2
 	}
 }
 
-func FFIVarP[P any](f func(...P) error) func(...P) IO[monadic.Unit] {
+func LiftFVarP[P any](f func(...P) error) func(...P) IO[monadic.Unit] {
 	return func(ps ...P) IO[monadic.Unit] {
 		return IO[monadic.Unit]{
 			v: lazy.New(func() either.Either[error, monadic.Unit] {
@@ -198,7 +198,7 @@ func FFIVarP[P any](f func(...P) error) func(...P) IO[monadic.Unit] {
 	}
 }
 
-func FFI1PVarP[P, VP any](f func(P, ...VP) error) func(P, ...VP) IO[monadic.Unit] {
+func LiftF1PVarP[P, VP any](f func(P, ...VP) error) func(P, ...VP) IO[monadic.Unit] {
 	return func(p P, ps ...VP) IO[monadic.Unit] {
 		return IO[monadic.Unit]{
 			v: lazy.New(func() either.Either[error, monadic.Unit] {
@@ -211,7 +211,7 @@ func FFI1PVarP[P, VP any](f func(P, ...VP) error) func(P, ...VP) IO[monadic.Unit
 	}
 }
 
-func FFI2PVarP[P1, P2, VP any](f func(P1, P2, ...VP) error) func(P1, P2, ...VP) IO[monadic.Unit] {
+func LiftF2PVarP[P1, P2, VP any](f func(P1, P2, ...VP) error) func(P1, P2, ...VP) IO[monadic.Unit] {
 	return func(p1 P1, p2 P2, ps ...VP) IO[monadic.Unit] {
 		return IO[monadic.Unit]{
 			v: lazy.New(func() either.Either[error, monadic.Unit] {
@@ -224,7 +224,7 @@ func FFI2PVarP[P1, P2, VP any](f func(P1, P2, ...VP) error) func(P1, P2, ...VP) 
 	}
 }
 
-func FFI1R[R any](f func() (R, error)) func() IO[R] {
+func LiftF1R[R any](f func() (R, error)) func() IO[R] {
 	return func() IO[R] {
 		return IO[R]{
 			v: lazy.New(func() either.Either[error, R] {
@@ -238,7 +238,7 @@ func FFI1R[R any](f func() (R, error)) func() IO[R] {
 	}
 }
 
-func FFI1P1R[P, R any](f func(P) (R, error)) func(P) IO[R] {
+func LiftF1P1R[P, R any](f func(P) (R, error)) func(P) IO[R] {
 	return func(p P) IO[R] {
 		return IO[R]{
 			v: lazy.New(func() either.Either[error, R] {
@@ -252,7 +252,7 @@ func FFI1P1R[P, R any](f func(P) (R, error)) func(P) IO[R] {
 	}
 }
 
-func FFI2P1R[P1, P2, R any](f func(P1, P2) (R, error)) func(P1, P2) IO[R] {
+func LiftF2P1R[P1, P2, R any](f func(P1, P2) (R, error)) func(P1, P2) IO[R] {
 	return func(p1 P1, p2 P2) IO[R] {
 		return IO[R]{
 			v: lazy.New(func() either.Either[error, R] {
@@ -266,7 +266,7 @@ func FFI2P1R[P1, P2, R any](f func(P1, P2) (R, error)) func(P1, P2) IO[R] {
 	}
 }
 
-func FFI3P1R[P1, P2, P3, R any](f func(P1, P2, P3) (R, error)) func(P1, P2, P3) IO[R] {
+func LiftF3P1R[P1, P2, P3, R any](f func(P1, P2, P3) (R, error)) func(P1, P2, P3) IO[R] {
 	return func(p1 P1, p2 P2, p3 P3) IO[R] {
 		return IO[R]{
 			v: lazy.New(func() either.Either[error, R] {
@@ -280,7 +280,7 @@ func FFI3P1R[P1, P2, P3, R any](f func(P1, P2, P3) (R, error)) func(P1, P2, P3) 
 	}
 }
 
-func FFI4P1R[P1, P2, P3, P4, R any](f func(P1, P2, P3, P4) (R, error)) func(P1, P2, P3, P4) IO[R] {
+func LiftF4P1R[P1, P2, P3, P4, R any](f func(P1, P2, P3, P4) (R, error)) func(P1, P2, P3, P4) IO[R] {
 	return func(p1 P1, p2 P2, p3 P3, p4 P4) IO[R] {
 		return IO[R]{
 			v: lazy.New(func() either.Either[error, R] {
@@ -294,7 +294,7 @@ func FFI4P1R[P1, P2, P3, P4, R any](f func(P1, P2, P3, P4) (R, error)) func(P1, 
 	}
 }
 
-func FFI5P1R[P1, P2, P3, P4, P5, R any](f func(P1, P2, P3, P4, P5) (R, error)) func(P1, P2, P3, P4, P5) IO[R] {
+func LiftF5P1R[P1, P2, P3, P4, P5, R any](f func(P1, P2, P3, P4, P5) (R, error)) func(P1, P2, P3, P4, P5) IO[R] {
 	return func(p1 P1, p2 P2, p3 P3, p4 P4, p5 P5) IO[R] {
 		return IO[R]{
 			v: lazy.New(func() either.Either[error, R] {
@@ -308,7 +308,7 @@ func FFI5P1R[P1, P2, P3, P4, P5, R any](f func(P1, P2, P3, P4, P5) (R, error)) f
 	}
 }
 
-func FFIVarP1R[P, R any](f func(...P) (R, error)) func(...P) IO[R] {
+func LiftFVarP1R[P, R any](f func(...P) (R, error)) func(...P) IO[R] {
 	return func(ps ...P) IO[R] {
 		return IO[R]{
 			v: lazy.New(func() either.Either[error, R] {
@@ -322,7 +322,7 @@ func FFIVarP1R[P, R any](f func(...P) (R, error)) func(...P) IO[R] {
 	}
 }
 
-func FFI1PVarP1R[P, VP, R any](f func(P, ...VP) (R, error)) func(P, ...VP) IO[R] {
+func LiftF1PVarP1R[P, VP, R any](f func(P, ...VP) (R, error)) func(P, ...VP) IO[R] {
 	return func(p P, ps ...VP) IO[R] {
 		return IO[R]{
 			v: lazy.New(func() either.Either[error, R] {
@@ -336,7 +336,7 @@ func FFI1PVarP1R[P, VP, R any](f func(P, ...VP) (R, error)) func(P, ...VP) IO[R]
 	}
 }
 
-func FFI2PVarP1R[P1, P2, VP, R any](f func(P1, P2, ...VP) (R, error)) func(P1, P2, ...VP) IO[R] {
+func LiftF2PVarP1R[P1, P2, VP, R any](f func(P1, P2, ...VP) (R, error)) func(P1, P2, ...VP) IO[R] {
 	return func(p1 P1, p2 P2, ps ...VP) IO[R] {
 		return IO[R]{
 			v: lazy.New(func() either.Either[error, R] {
@@ -350,7 +350,7 @@ func FFI2PVarP1R[P1, P2, VP, R any](f func(P1, P2, ...VP) (R, error)) func(P1, P
 	}
 }
 
-func FFI2R[R1, R2 any](f func() (R1, R2, error)) func() IO[tuple.Tuple[R1, R2]] {
+func LiftF2R[R1, R2 any](f func() (R1, R2, error)) func() IO[tuple.Tuple[R1, R2]] {
 	return func() IO[tuple.Tuple[R1, R2]] {
 		return IO[tuple.Tuple[R1, R2]]{
 			v: lazy.New(func() either.Either[error, tuple.Tuple[R1, R2]] {
@@ -364,7 +364,7 @@ func FFI2R[R1, R2 any](f func() (R1, R2, error)) func() IO[tuple.Tuple[R1, R2]] 
 	}
 }
 
-func FFI1P2R[P, R1, R2 any](f func(P) (R1, R2, error)) func(P) IO[tuple.Tuple[R1, R2]] {
+func LiftF1P2R[P, R1, R2 any](f func(P) (R1, R2, error)) func(P) IO[tuple.Tuple[R1, R2]] {
 	return func(p P) IO[tuple.Tuple[R1, R2]] {
 		return IO[tuple.Tuple[R1, R2]]{
 			v: lazy.New(func() either.Either[error, tuple.Tuple[R1, R2]] {
@@ -378,7 +378,7 @@ func FFI1P2R[P, R1, R2 any](f func(P) (R1, R2, error)) func(P) IO[tuple.Tuple[R1
 	}
 }
 
-func FFI2P2R[P1, P2, R1, R2 any](f func(P1, P2) (R1, R2, error)) func(P1, P2) IO[tuple.Tuple[R1, R2]] {
+func LiftF2P2R[P1, P2, R1, R2 any](f func(P1, P2) (R1, R2, error)) func(P1, P2) IO[tuple.Tuple[R1, R2]] {
 	return func(p1 P1, p2 P2) IO[tuple.Tuple[R1, R2]] {
 		return IO[tuple.Tuple[R1, R2]]{
 			v: lazy.New(func() either.Either[error, tuple.Tuple[R1, R2]] {
@@ -392,7 +392,7 @@ func FFI2P2R[P1, P2, R1, R2 any](f func(P1, P2) (R1, R2, error)) func(P1, P2) IO
 	}
 }
 
-func FFI3P2R[P1, P2, P3, R1, R2 any](f func(P1, P2, P3) (R1, R2, error)) func(P1, P2, P3) IO[tuple.Tuple[R1, R2]] {
+func LiftF3P2R[P1, P2, P3, R1, R2 any](f func(P1, P2, P3) (R1, R2, error)) func(P1, P2, P3) IO[tuple.Tuple[R1, R2]] {
 	return func(p1 P1, p2 P2, p3 P3) IO[tuple.Tuple[R1, R2]] {
 		return IO[tuple.Tuple[R1, R2]]{
 			v: lazy.New(func() either.Either[error, tuple.Tuple[R1, R2]] {
@@ -406,7 +406,7 @@ func FFI3P2R[P1, P2, P3, R1, R2 any](f func(P1, P2, P3) (R1, R2, error)) func(P1
 	}
 }
 
-func FFI4P2R[P1, P2, P3, P4, R1, R2 any](f func(P1, P2, P3, P4) (R1, R2, error)) func(P1, P2, P3, P4) IO[tuple.Tuple[R1, R2]] {
+func LiftF4P2R[P1, P2, P3, P4, R1, R2 any](f func(P1, P2, P3, P4) (R1, R2, error)) func(P1, P2, P3, P4) IO[tuple.Tuple[R1, R2]] {
 	return func(p1 P1, p2 P2, p3 P3, p4 P4) IO[tuple.Tuple[R1, R2]] {
 		return IO[tuple.Tuple[R1, R2]]{
 			v: lazy.New(func() either.Either[error, tuple.Tuple[R1, R2]] {
@@ -420,7 +420,7 @@ func FFI4P2R[P1, P2, P3, P4, R1, R2 any](f func(P1, P2, P3, P4) (R1, R2, error))
 	}
 }
 
-func FFI5P2R[P1, P2, P3, P4, P5, R1, R2 any](f func(P1, P2, P3, P4, P5) (R1, R2, error)) func(P1, P2, P3, P4, P5) IO[tuple.Tuple[R1, R2]] {
+func LiftF5P2R[P1, P2, P3, P4, P5, R1, R2 any](f func(P1, P2, P3, P4, P5) (R1, R2, error)) func(P1, P2, P3, P4, P5) IO[tuple.Tuple[R1, R2]] {
 	return func(p1 P1, p2 P2, p3 P3, p4 P4, p5 P5) IO[tuple.Tuple[R1, R2]] {
 		return IO[tuple.Tuple[R1, R2]]{
 			v: lazy.New(func() either.Either[error, tuple.Tuple[R1, R2]] {
@@ -434,7 +434,7 @@ func FFI5P2R[P1, P2, P3, P4, P5, R1, R2 any](f func(P1, P2, P3, P4, P5) (R1, R2,
 	}
 }
 
-func FFIVarP2R[P, R1, R2 any](f func(...P) (R1, R2, error)) func(...P) IO[tuple.Tuple[R1, R2]] {
+func LiftFVarP2R[P, R1, R2 any](f func(...P) (R1, R2, error)) func(...P) IO[tuple.Tuple[R1, R2]] {
 	return func(ps ...P) IO[tuple.Tuple[R1, R2]] {
 		return IO[tuple.Tuple[R1, R2]]{
 			v: lazy.New(func() either.Either[error, tuple.Tuple[R1, R2]] {
@@ -448,7 +448,7 @@ func FFIVarP2R[P, R1, R2 any](f func(...P) (R1, R2, error)) func(...P) IO[tuple.
 	}
 }
 
-func FFI1PVarP2R[P, VP, R1, R2 any](f func(P, ...VP) (R1, R2, error)) func(P, ...VP) IO[tuple.Tuple[R1, R2]] {
+func LiftF1PVarP2R[P, VP, R1, R2 any](f func(P, ...VP) (R1, R2, error)) func(P, ...VP) IO[tuple.Tuple[R1, R2]] {
 	return func(p P, ps ...VP) IO[tuple.Tuple[R1, R2]] {
 		return IO[tuple.Tuple[R1, R2]]{
 			v: lazy.New(func() either.Either[error, tuple.Tuple[R1, R2]] {
@@ -462,7 +462,7 @@ func FFI1PVarP2R[P, VP, R1, R2 any](f func(P, ...VP) (R1, R2, error)) func(P, ..
 	}
 }
 
-func FFI2PVarP2R[P1, P2, VP, R1, R2 any](f func(P1, P2, ...VP) (R1, R2, error)) func(P1, P2, ...VP) IO[tuple.Tuple[R1, R2]] {
+func LiftF2PVarP2R[P1, P2, VP, R1, R2 any](f func(P1, P2, ...VP) (R1, R2, error)) func(P1, P2, ...VP) IO[tuple.Tuple[R1, R2]] {
 	return func(p1 P1, p2 P2, ps ...VP) IO[tuple.Tuple[R1, R2]] {
 		return IO[tuple.Tuple[R1, R2]]{
 			v: lazy.New(func() either.Either[error, tuple.Tuple[R1, R2]] {

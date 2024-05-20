@@ -12,11 +12,11 @@ import (
 
 func MonadicDoCase() {
 	fmt.Println("run monadic case with do syntax...")
-	Init := FFI1R(Init)
-	Connect := FFI1P1R(Connect)
-	Send := FFI2P(Send)
-	Recv := FFI1P1R(Recv)
-	Println := FFIVarP1R(fmt.Println)
+	Init := LiftF1R(Init)
+	Connect := LiftF1P1R(Connect)
+	Send := LiftF2P(Send)
+	Recv := LiftF1P1R(Recv)
+	Println := LiftFVarP1R(fmt.Println)
 
 	Perform(
 		Catch(
