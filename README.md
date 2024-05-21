@@ -6,11 +6,11 @@ A set of monadic functions for go
 
 - Here is classic code.
 
-https://github.com/arcane-craft/monadic/blob/915556423b447a48127a4f5e7ed532d786b7d44e/examples/showcase/classic.go#L38-L57
+https://github.com/arcane-craft/monadic/blob/1e3fc213838ccd8176ab4618779ee232e0ca0dad/examples/showcase/classic.go#L38-L57
 
 - Rewrite it with monadic style, notice that we used do syntax.
 
-https://github.com/arcane-craft/monadic/blob/10574908f265b9f8bcf586506dea5bc7a15d1f94/examples/showcase/monad.go#L15-L34
+https://github.com/arcane-craft/monadic/blob/1e3fc213838ccd8176ab4618779ee232e0ca0dad/examples/showcase/monad.go#L15-L34
 
 - Process code with optimize tool before building the project.
 
@@ -21,4 +21,4 @@ go run -mod=mod github.com/arcane-craft/monadic/tool/optimize@latest [PROJECT_RO
 
 - This is the result of opitmization.
 
-https://github.com/arcane-craft/monadic/blob/10574908f265b9f8bcf586506dea5bc7a15d1f94/examples/showcase/monad_monadic_prod.go#L15-L28
+https://github.com/arcane-craft/monadic/blob/1e3fc213838ccd8176ab4618779ee232e0ca0dad/examples/showcase/monad_monadic_prod.go#L15-L28
