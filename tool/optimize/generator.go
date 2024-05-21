@@ -147,13 +147,15 @@ func Generate(info *FileInfo, writer io.Writer) error {
 	if _, err := writer.Write([]byte(GenBuildFlags(false))); err != nil {
 		return fmt.Errorf("writer.Write() failed: %w", err)
 	}
+	nextOffset := info.ImportExtent.End.Offset
 	if info.BuildFlag != nil {
 		_, err := file.Seek(int64(info.BuildFlag.End.Offset+2), io.SeekStart)
 		if err != nil {
 			return fmt.Errorf("file.Seek() failed: %w", err)
 		}
+		nextOffset = info.ImportExtent.End.Offset - info.BuildFlag.End.Offset - 1
 	}
-	if _, err := io.CopyN(writer, file, int64(info.ImportExtent.End.Offset-info.BuildFlag.End.Offset-1)); err != nil {
+	if _, err := io.CopyN(writer, file, int64(nextOffset)); err != nil {
 		return fmt.Errorf("io.CopyN() failed: %w", err)
 	}
 	for p, n := range addImports {
