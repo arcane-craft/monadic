@@ -21,4 +21,4 @@ go run -mod=mod github.com/arcane-craft/monadic/tool/optimize@latest [PROJECT_RO
 
 - This is the result of opitmization.
 
-https://github.com/arcane-craft/monadic/blob/1e3fc213838ccd8176ab4618779ee232e0ca0dad/examples/showcase/monad_monadic_prod.go#L15-L28
+https://github.com/arcane-craft/monadic/blob/9735a8dc94461417ea04787667ee1c50919d90b6/examples/showcase/monad_monadic_prod.go#L15-L28
