@@ -114,6 +114,7 @@ func LiftA2[
 		Applicative[FC, C, _T]
 		monadic.Data[C, _T]
 	},
+	A, B, C any,
 	FA interface {
 		Applicative[FA, A, _T]
 		monadic.Data[A, _T]
@@ -122,7 +123,6 @@ func LiftA2[
 		Applicative[FB, B, _T]
 		monadic.Data[B, _T]
 	},
-	A, B, C any,
 	_T any,
 ](f func(A, B) C, a FA, b FB) FC {
 	return basics.Zero[FC]().Concretize(basics.Zero[FA]().LiftA2(func(a A, b any) any {

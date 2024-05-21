@@ -33,6 +33,20 @@ func IsNil[A any](l List[A]) bools.Bool {
 	return len(l) <= 0
 }
 
+func Head[A any](l List[A]) A {
+	if len(l) <= 0 {
+		panic("empty list")
+	}
+	return l[0]
+}
+
+func Tail[A any](l List[A]) List[A] {
+	if len(l) <= 0 {
+		panic("empty list")
+	}
+	return l[1:]
+}
+
 var _ = monad.ImplMonadDo[List[any]]()
 var _ = algebra.ImplMonoid[List[any]]()
 var _ = foldable.ImplFoldable[List[any]]()

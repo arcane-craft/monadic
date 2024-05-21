@@ -6,7 +6,6 @@ import (
 	"github.com/arcane-craft/monadic/foldable"
 	"github.com/arcane-craft/monadic/lazy"
 	"github.com/arcane-craft/monadic/monad"
-	"github.com/arcane-craft/monadic/traversable"
 )
 
 type aType struct{}
@@ -35,6 +34,13 @@ func IsSome[A any](o Option[A]) bools.Bool {
 	return o.v != nil
 }
 
+func FromSome[A any](o Option[A]) A {
+	if o.v == nil {
+		panic("Empty Option")
+	}
+	return *o.v
+}
+
 func FromOption[A any](a lazy.Value[A], o Option[A]) A {
 	if o.v == nil {
 		return a()
@@ -45,4 +51,3 @@ func FromOption[A any](a lazy.Value[A], o Option[A]) A {
 var _ = monad.ImplMonadDo[Option[any]]()
 var _ = algebra.ImplMonoid[Option[any]]()
 var _ = foldable.ImplFoldable[Option[any]]()
-var _ = traversable.ImplTraversable[Option[any]]()

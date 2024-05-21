@@ -2,6 +2,10 @@ package option
 
 import (
 	"github.com/arcane-craft/monadic"
+	"github.com/arcane-craft/monadic/applicative"
+	"github.com/arcane-craft/monadic/basics"
+	"github.com/arcane-craft/monadic/foldable"
+	"github.com/arcane-craft/monadic/function"
 )
 
 func (Option[A]) Kind() aType {
@@ -101,4 +105,99 @@ func (Option[A]) Foldr(f func(A, any) any, init any, input Option[A]) any {
 	return f(*input.v, init)
 }
 
-func (Option[A]) Traverse() {}
+func Traverse[
+	FTB interface {
+		applicative.Applicative[FTB, Option[B], _F]
+		monadic.Data[Option[B], _F]
+	},
+	A any,
+	FB interface {
+		applicative.Applicative[FB, B, _F]
+		monadic.Data[B, _F]
+	},
+	B any,
+	_F any,
+](f func(A) FB, t Option[A]) FTB {
+	if IsNone(t) {
+		return applicative.Pure[FTB](None[B]())
+	}
+	return applicative.LiftA[FTB](func(b B) Option[B] {
+		return Some(b)
+	}, f(FromSome(t)))
+}
+
+func Sequence[
+	FTA interface {
+		applicative.Applicative[FTA, Option[A], _F]
+		monadic.Data[Option[A], _F]
+	},
+	FA interface {
+		applicative.Applicative[FA, A, _F]
+		monadic.Data[A, _F]
+	},
+	A any,
+	_F any,
+](t Option[FA]) FTA {
+	return Traverse[FTA](basics.Id, t)
+}
+
+func For[
+	FTB interface {
+		applicative.Applicative[FTB, Option[B], _F]
+		monadic.Data[Option[B], _F]
+	},
+	FB interface {
+		applicative.Applicative[FB, B, _F]
+		monadic.Data[B, _F]
+	},
+	A, B any,
+	_F any,
+](t Option[A], f func(A) FB) FTB {
+	return Traverse[FTB](f, t)
+}
+
+func Traverse_[
+	FN interface {
+		applicative.Applicative[FN, monadic.Unit, _F]
+		monadic.Data[monadic.Unit, _F]
+	},
+	A any,
+	FB interface {
+		applicative.Applicative[FB, B, _F]
+		monadic.Data[FB, _F]
+	},
+	B any,
+	_F any,
+](f func(A) FB, t Option[A]) FN {
+	return foldable.Foldr(function.Uncurry(function.Compose(function.Curry(applicative.ApplyR[FB, FN]), f)), applicative.Pure[FN](monadic.Unit{}), t)
+}
+
+func Sequence_[
+	FN interface {
+		applicative.Applicative[FN, monadic.Unit, _F]
+		monadic.Data[monadic.Unit, _F]
+	},
+	FA interface {
+		applicative.Applicative[FA, A, _F]
+		monadic.Data[A, _F]
+	},
+	A any,
+	_F any,
+](t Option[FA]) FN {
+	return foldable.Foldr(applicative.ApplyR, applicative.Pure[FN](monadic.Unit{}), t)
+}
+
+func For_[
+	FN interface {
+		applicative.Applicative[FN, monadic.Unit, _F]
+		monadic.Data[monadic.Unit, _F]
+	},
+	FB interface {
+		applicative.Applicative[FB, B, _F]
+		monadic.Data[FB, _F]
+	},
+	A, B any,
+	_F any,
+](t Option[A], f func(A) FB) FN {
+	return Traverse_[FN](f, t)
+}
