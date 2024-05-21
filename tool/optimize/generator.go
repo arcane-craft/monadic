@@ -147,7 +147,7 @@ func Generate(info *FileInfo, writer io.Writer) error {
 	if _, err := writer.Write([]byte(GenBuildFlags(false))); err != nil {
 		return fmt.Errorf("writer.Write() failed: %w", err)
 	}
-	nextOffset := info.ImportExtent.End.Offset
+	nextOffset := info.ImportExtent.End.Offset + 1
 	if info.BuildFlag != nil {
 		_, err := file.Seek(int64(info.BuildFlag.End.Offset+2), io.SeekStart)
 		if err != nil {
