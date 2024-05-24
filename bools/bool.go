@@ -31,7 +31,7 @@ func Default[A any](t lazy.Value[A]) func() (lazy.Value[A], bool) {
 	return Case(true, t)
 }
 
-func Switch[A, B any](v A, cases ...func() (lazy.Value[B], bool)) B {
+func Switch[A any](cases ...func() (lazy.Value[A], bool)) A {
 	for _, c := range cases {
 		if t, ok := c(); ok {
 			return t()
