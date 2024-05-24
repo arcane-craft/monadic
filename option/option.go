@@ -2,7 +2,6 @@ package option
 
 import (
 	"github.com/arcane-craft/monadic/algebra"
-	"github.com/arcane-craft/monadic/bools"
 	"github.com/arcane-craft/monadic/foldable"
 	"github.com/arcane-craft/monadic/lazy"
 	"github.com/arcane-craft/monadic/monad"
@@ -26,11 +25,11 @@ func None[A any]() Option[A] {
 	return Option[A]{}
 }
 
-func IsNone[A any](o Option[A]) bools.Bool {
+func IsNone[A any](o Option[A]) bool {
 	return o.v == nil
 }
 
-func IsSome[A any](o Option[A]) bools.Bool {
+func IsSome[A any](o Option[A]) bool {
 	return o.v != nil
 }
 

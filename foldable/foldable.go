@@ -81,23 +81,23 @@ func ConcatMap[
 
 func And[
 	F interface {
-		Foldable[F, lazy.Value[bools.Bool], _T]
-		monadic.Data[lazy.Value[bools.Bool], _T]
+		Foldable[F, lazy.Value[bool], _T]
+		monadic.Data[lazy.Value[bool], _T]
 	},
 	A any,
 	_T any,
-](f F) bools.Bool {
+](f F) bool {
 	return Foldl(bools.And, true, f)
 }
 
 func Or[
 	F interface {
-		Foldable[F, lazy.Value[bools.Bool], _T]
-		monadic.Data[lazy.Value[bools.Bool], _T]
+		Foldable[F, lazy.Value[bool], _T]
+		monadic.Data[lazy.Value[bool], _T]
 	},
 	A any,
 	_T any,
-](f F) bools.Bool {
+](f F) bool {
 	return Foldl(bools.Or, false, f)
 }
 
@@ -108,8 +108,8 @@ func Any[
 	},
 	A any,
 	_T any,
-](p func(A) bools.Bool, f F) bools.Bool {
-	return Foldl(func(x bools.Bool, y A) bools.Bool {
+](p func(A) bool, f F) bool {
+	return Foldl(func(x bool, y A) bool {
 		return x || p(y)
 	}, false, f)
 }
@@ -121,8 +121,8 @@ func All[
 	},
 	A any,
 	_T any,
-](p func(A) bools.Bool, f F) bools.Bool {
-	return Foldl(func(x bools.Bool, y A) bools.Bool {
+](p func(A) bool, f F) bool {
+	return Foldl(func(x bool, y A) bool {
 		return x && p(y)
 	}, true, f)
 }

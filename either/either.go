@@ -1,7 +1,6 @@
 package either
 
 import (
-	"github.com/arcane-craft/monadic/bools"
 	"github.com/arcane-craft/monadic/function"
 	"github.com/arcane-craft/monadic/lazy"
 	"github.com/arcane-craft/monadic/monad"
@@ -30,11 +29,11 @@ func Right[A, B any](v B) Either[A, B] {
 	}
 }
 
-func IsLeft[A, B any](e Either[A, B]) bools.Bool {
+func IsLeft[A, B any](e Either[A, B]) bool {
 	return e.left != nil
 }
 
-func IsRight[A, B any](e Either[A, B]) bools.Bool {
+func IsRight[A, B any](e Either[A, B]) bool {
 	return e.right != nil
 }
 
