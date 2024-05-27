@@ -21,19 +21,19 @@ func Not(a bool) bool {
 	return !a
 }
 
-func Case[A any](p bool, t lazy.Value[A]) func() (lazy.Value[A], bool) {
-	return func() (lazy.Value[A], bool) {
+func Case[A any](p lazy.Value[bool], t lazy.Value[A]) func() (lazy.Value[A], lazy.Value[bool]) {
+	return func() (lazy.Value[A], lazy.Value[bool]) {
 		return t, p
 	}
 }
 
-func Default[A any](t lazy.Value[A]) func() (lazy.Value[A], bool) {
-	return Case(true, t)
+func Default[A any](t lazy.Value[A]) func() (lazy.Value[A], lazy.Value[bool]) {
+	return Case(lazy.Pure(true), t)
 }
 
-func Switch[A any](cases ...func() (lazy.Value[A], bool)) A {
+func Switch[A any](cases ...func() (lazy.Value[A], lazy.Value[bool])) A {
 	for _, c := range cases {
-		if t, ok := c(); ok {
+		if t, ok := c(); ok() {
 			return t()
 		}
 	}

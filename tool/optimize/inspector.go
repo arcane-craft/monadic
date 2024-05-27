@@ -114,7 +114,7 @@ func NewMonadDoSyntaxInspector(pkg *packages.Package, instances []*MonadInstance
 	for _, file := range pkg.Syntax {
 		for _, cg := range file.Comments {
 			for _, c := range cg.List {
-				if strings.Contains(c.Text, "//go:build !monadic_production") {
+				if strings.Contains(c.Text, "//go:build !monadic_production") || strings.Contains(c.Text, "//go:build monadic_production") {
 					fileName := pkg.Fset.Position(c.Pos()).Filename
 					buildFlags[fileName] = Extent{
 						Start: pkg.Fset.Position(c.Pos()),
@@ -293,10 +293,10 @@ func (i *MonadDoSyntaxInspector) inspectDoFunCall(funExpr ast.Expr, args []ast.E
 func (i *MonadDoSyntaxInspector) InspectDoSyntax() []*FileInfo {
 	fileMap := make(map[string]*FileInfo)
 	ins := inspector.New(i.pkg.Syntax)
-	ins.Preorder([]ast.Node{
+	ins.Nodes([]ast.Node{
 		&ast.GenDecl{},
 		&ast.CallExpr{},
-	}, func(n ast.Node) {
+	}, func(n ast.Node, _ bool) bool {
 		switch node := n.(type) {
 		case *ast.GenDecl:
 			if node.Tok == token.IMPORT {
@@ -307,6 +307,7 @@ func (i *MonadDoSyntaxInspector) InspectDoSyntax() []*FileInfo {
 					i.importExtents[end.Filename] = extent
 				}
 			}
+			return false
 		case *ast.CallExpr:
 			block, retType := i.inspectDoFunCall(node.Fun, node.Args)
 			if len(block) > 0 {
@@ -329,8 +330,10 @@ func (i *MonadDoSyntaxInspector) InspectDoSyntax() []*FileInfo {
 					Block:   block,
 					RetType: retType,
 				})
+				return false
 			}
 		}
+		return true
 	})
 	var ret []*FileInfo
 	for _, f := range fileMap {

@@ -9,7 +9,7 @@ import (
 	"golang.org/x/tools/go/packages"
 )
 
-func LoadPackages(ctx context.Context, path string) ([]*packages.Package, error) {
+func LoadPackages(ctx context.Context, path string, buildFlags ...string) ([]*packages.Package, error) {
 	cfg := &packages.Config{
 		Mode: packages.NeedName |
 			packages.NeedFiles |
@@ -19,10 +19,11 @@ func LoadPackages(ctx context.Context, path string) ([]*packages.Package, error)
 			packages.NeedSyntax |
 			packages.NeedTypesInfo |
 			packages.NeedModule,
-		Context: ctx,
-		Logf:    log.Printf,
-		Dir:     path,
-		Env:     os.Environ(),
+		Context:    ctx,
+		Logf:       log.Printf,
+		Dir:        path,
+		Env:        os.Environ(),
+		BuildFlags: buildFlags,
 	}
 	pkgs, err := packages.Load(cfg, "./...")
 	if err != nil {
