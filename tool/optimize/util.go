@@ -59,7 +59,7 @@ func ResetTypeStrPkgName(str string, imports map[string]string, currentPkg strin
 		} else if len(pkgPath) > 0 {
 			pkgName, ok := imports[pkgPath]
 			if !ok {
-				pkgName = path.Base(pkgPath) + "_" + GetRandPkgName()
+				pkgName = GetRandPkgName(path.Base(pkgPath))
 				if adds == nil {
 					adds = map[string]string{}
 				}
@@ -84,8 +84,13 @@ func GetRandString(letters []rune, n int) string {
 	return string(b)
 }
 
-func GetRandPkgName() string {
+func GetRandPkgName(prefix string) string {
+	letters := []rune("abcdefghijklmnopqrstuvwxyz1234567890")
+	return prefix + "_" + GetRandString(letters, 7)
+}
+
+func GetRandVarName() string {
 	startLetters := []rune("abcdefghijklmnopqrstuvwxyz")
-	otherLetters := []rune("abcdefghijklmnopqrstuvwxyz1234567890_")
+	otherLetters := []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890")
 	return GetRandString(startLetters, 1) + GetRandString(otherLetters, 7)
 }

@@ -127,6 +127,13 @@ func Generate(info *FileInfo, writer io.Writer) error {
 							addImports[k] = v
 						}
 					}
+					if b.AnonymousCallExpr != nil {
+						call, err := readExtent(file, *b.AnonymousCallExpr)
+						if err != nil {
+							return fmt.Errorf("readExtent() failed: %w", err)
+						}
+						lastStmts[0] = strings.Replace(lastStmts[0], call, b.ReturnVar.Name, 1)
+					}
 					operation = GenReturn(GenBind(monadPkgName, str, GenBindBlock(b.ReturnVar.Name, varType, finalInstanceType, lastStmts)))
 				} else {
 					operation = GenReturn(GenThen(monadPkgName, str, GenThenBlock(finalInstanceType, lastStmts)))

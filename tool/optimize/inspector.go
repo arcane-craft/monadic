@@ -167,10 +167,11 @@ type Variable struct {
 }
 
 type MonadStmt struct {
-	PreStmts     []Extent
-	CallExpr     *Extent
-	InstanceType string
-	ReturnVar    *Variable
+	PreStmts          []Extent
+	AnonymousCallExpr *Extent
+	CallExpr          *Extent
+	InstanceType      string
+	ReturnVar         *Variable
 }
 
 type MonadDoSyntax struct {
@@ -249,6 +250,47 @@ func (i *MonadDoSyntaxInspector) inspectDoBlock(block *ast.BlockStmt) []*MonadSt
 			}
 		}
 		if !isExtraction {
+			ast.Inspect(stmt, func(n ast.Node) bool {
+				if n != nil {
+					switch node := n.(type) {
+					case *ast.CallExpr:
+						switch fun := node.Fun.(type) {
+						case *ast.Ident:
+							if i.isMonadDoFun(fun) {
+								return false
+							}
+						case *ast.SelectorExpr:
+							if i.isMonadDoFun(fun.Sel) {
+								return false
+							}
+							sel := fun
+							if sel.Sel.Name == monadDoExtractFun {
+								instanceType := i.pkg.TypesInfo.TypeOf(sel.X).String()
+								if _, ok := i.instanceTypes[GetNameFromTypeStr(instanceType)]; ok {
+									ms.InstanceType = instanceType
+									ms.CallExpr = &Extent{
+										Start: i.pkg.Fset.Position(sel.X.Pos()),
+										End:   i.pkg.Fset.Position(sel.X.End()),
+									}
+									ms.AnonymousCallExpr = &Extent{
+										Start: i.pkg.Fset.Position(node.Pos()),
+										End:   i.pkg.Fset.Position(node.End()),
+									}
+									ms.ReturnVar = &Variable{
+										Name: GetRandVarName(),
+										Type: i.pkg.TypesInfo.TypeOf(node).String(),
+									}
+									monadStmts = append(monadStmts, ms)
+									ms = new(MonadStmt)
+									return false
+								}
+							}
+						}
+					}
+				}
+				return true
+			})
+
 			ms.PreStmts = append(ms.PreStmts, Extent{
 				Start: i.pkg.Fset.Position(stmt.Pos()),
 				End:   i.pkg.Fset.Position(stmt.End()),
