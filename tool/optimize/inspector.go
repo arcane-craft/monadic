@@ -203,6 +203,7 @@ func (i *MonadDoSyntaxInspector) inspectDoBlock(block *ast.BlockStmt) []*MonadSt
 	var monadStmts []*MonadStmt
 	ms := new(MonadStmt)
 	for _, stmt := range block.List {
+		var isExtraction bool
 		switch s := stmt.(type) {
 		case *ast.AssignStmt:
 			if s.Tok == token.DEFINE && len(s.Rhs) == 1 && len(s.Lhs) == 1 {
@@ -223,6 +224,7 @@ func (i *MonadDoSyntaxInspector) inspectDoBlock(block *ast.BlockStmt) []*MonadSt
 							}
 							monadStmts = append(monadStmts, ms)
 							ms = new(MonadStmt)
+							isExtraction = true
 						}
 					}
 				}
@@ -241,10 +243,12 @@ func (i *MonadDoSyntaxInspector) inspectDoBlock(block *ast.BlockStmt) []*MonadSt
 						}
 						monadStmts = append(monadStmts, ms)
 						ms = new(MonadStmt)
+						isExtraction = true
 					}
 				}
 			}
-		default:
+		}
+		if !isExtraction {
 			ms.PreStmts = append(ms.PreStmts, Extent{
 				Start: i.pkg.Fset.Position(stmt.Pos()),
 				End:   i.pkg.Fset.Position(stmt.End()),

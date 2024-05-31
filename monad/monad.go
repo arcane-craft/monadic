@@ -84,6 +84,23 @@ func Then[
 	})
 }
 
+func Then_[
+	MA interface {
+		Monad[MA, A, _T]
+		monadic.Data[A, _T]
+	},
+	MB interface {
+		Monad[MB, B, _T]
+		monadic.Data[B, _T]
+	},
+	A, B any,
+	_T any,
+](ma MA, mb MB) MB {
+	return Then(ma, func() MB {
+		return mb
+	})
+}
+
 func Join[
 	MM interface {
 		Monad[MM, M, _T]

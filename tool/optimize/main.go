@@ -100,6 +100,6 @@ func main() {
 				finished = false
 			}
 		}
-		buildFlags = append(buildFlags, "-tags=monadic_production")
+		buildFlags = []string{"-tags=monadic_production"}
 	}
 }
