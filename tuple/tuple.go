@@ -8,15 +8,15 @@ func T[A, B any](a A, b B) Tuple[A, B] {
 	}
 }
 
-func T1st[A, B any](a A, _ B) A {
+func First[A, B any](a A, _ B) A {
 	return a
 }
 
-func T2nd[A, B any](_ A, b B) B {
+func Second[A, B any](_ A, b B) B {
 	return b
 }
 
-func Map2[A, B, Ap, Bp any](m func(A, B) (Ap, Bp), fa Tuple[A, B]) Tuple[Ap, Bp] {
+func Map[A, B, Ap, Bp any](m func(A, B) (Ap, Bp), fa Tuple[A, B]) Tuple[Ap, Bp] {
 	return func() (Ap, Bp) {
 		return m(fa())
 	}
@@ -30,15 +30,15 @@ func New3[A, B, C any](a A, b B, c C) Tuple3[A, B, C] {
 	}
 }
 
-func T1st3[A, B, C any](a A, _ B, _ C) A {
+func First3[A, B, C any](a A, _ B, _ C) A {
 	return a
 }
 
-func T2nd3[A, B, C any](_ A, b B, _ C) B {
+func Second3[A, B, C any](_ A, b B, _ C) B {
 	return b
 }
 
-func T3rd3[A, B, C any](_ A, _ B, c C) C {
+func Third[A, B, C any](_ A, _ B, c C) C {
 	return c
 }
 
@@ -56,19 +56,19 @@ func T4[A, B, C, D any](a A, b B, c C, d D) Tuple4[A, B, C, D] {
 	}
 }
 
-func T1st4[A, B, C, D any](a A, _ B, _ C, _ D) A {
+func First4[A, B, C, D any](a A, _ B, _ C, _ D) A {
 	return a
 }
 
-func T2nd4[A, B, C, D any](_ A, b B, _ C, _ D) B {
+func Second4[A, B, C, D any](_ A, b B, _ C, _ D) B {
 	return b
 }
 
-func T3rd4[A, B, C, D any](_ A, _ B, c C, _ D) C {
+func Third4[A, B, C, D any](_ A, _ B, c C, _ D) C {
 	return c
 }
 
-func T4th4[A, B, C, D any](_ A, _ B, _ C, d D) D {
+func Fourth[A, B, C, D any](_ A, _ B, _ C, d D) D {
 	return d
 }
 
@@ -86,23 +86,23 @@ func T5[A, B, C, D, E any](a A, b B, c C, d D, e E) Tuple5[A, B, C, D, E] {
 	}
 }
 
-func T1st5[A, B, C, D, E any](a A, _ B, _ C, _ D, _ E) A {
+func First5[A, B, C, D, E any](a A, _ B, _ C, _ D, _ E) A {
 	return a
 }
 
-func T2nd5[A, B, C, D, E any](_ A, b B, _ C, _ D, _ E) B {
+func Second5[A, B, C, D, E any](_ A, b B, _ C, _ D, _ E) B {
 	return b
 }
 
-func T3rd5[A, B, C, D, E any](_ A, _ B, c C, _ D, _ E) C {
+func Third5[A, B, C, D, E any](_ A, _ B, c C, _ D, _ E) C {
 	return c
 }
 
-func T4th5[A, B, C, D, E any](_ A, _ B, _ C, d D, _ E) D {
+func Fourth5[A, B, C, D, E any](_ A, _ B, _ C, d D, _ E) D {
 	return d
 }
 
-func T5th5[A, B, C, D, E any](_ A, _ B, _ C, _ D, e E) E {
+func Fifth[A, B, C, D, E any](_ A, _ B, _ C, _ D, e E) E {
 	return e
 }
 

@@ -25,7 +25,7 @@ func Catch[A any](m io.IO[A], h func(error) io.IO[A]) io.IO[A] {
 
 func Descript[A any](m io.IO[A], desc string) io.IO[A] {
 	return io.New(lazy.New(func() either.Either[error, A] {
-		return result.Fail[A](fmt.Errorf(desc+" failed: %w", tuple.T2nd(io.Perform(m))))
+		return result.Fail[A](fmt.Errorf(desc+" failed: %w", tuple.Second(io.Perform(m))))
 	}))
 }
 

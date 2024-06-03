@@ -65,7 +65,10 @@ func ResetTypeStrPkgName(str string, imports map[string]string, currentPkg strin
 				}
 				adds[pkgPath] = pkgName
 			}
-			ret = strings.ReplaceAll(ret, pkgPath+".", pkgName+".")
+			if len(pkgName) > 0 {
+				pkgName += "."
+			}
+			ret = strings.ReplaceAll(ret, pkgPath+".", pkgName)
 		}
 	}
 	return
