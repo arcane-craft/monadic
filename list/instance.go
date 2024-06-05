@@ -71,14 +71,6 @@ func (List[A]) Bind(ma List[A], mm func(A) monadic.Data[any, aType]) monadic.Dat
 	return ret
 }
 
-func (List[A]) Do(proc func() List[A]) List[A] {
-	panic(monadic.NotSupportForTest)
-}
-
-func (m List[A]) X() A {
-	panic(monadic.NotSupportForTest)
-}
-
 func (List[A]) Append(a List[A], b List[A]) List[A] {
 	return append(append(make(List[A], 0, len(a)+len(b)), a...), b...)
 }

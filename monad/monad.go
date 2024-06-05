@@ -200,15 +200,15 @@ func LiftM3[
 }
 
 func FoldlM[
+	TB interface {
+		foldable.Foldable[TB, B, _T]
+		monadic.Data[B, _T]
+	},
 	MA interface {
 		Monad[MA, A, _M]
 		monadic.Data[A, _M]
 	},
 	A, B any,
-	TB interface {
-		foldable.Foldable[TB, B, _T]
-		monadic.Data[B, _T]
-	},
 	_M, _T any,
 ](fm func(A, B) MA, a0 A, x TB) MA {
 	return foldable.Foldl(func(ma MA, b B) MA {

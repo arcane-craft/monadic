@@ -46,6 +46,6 @@ func Tail[A any](l List[A]) List[A] {
 	return l[1:]
 }
 
-var _ = monad.ImplMonadDo[List[any]]()
+var _ = monad.ImplMonad[List[any]]()
 var _ = algebra.ImplMonoid[List[any]]()
 var _ = foldable.ImplFoldable[List[any]]()

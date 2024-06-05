@@ -27,8 +27,14 @@ func Case[A any](p lazy.Value[bool], t lazy.Value[A]) func() (lazy.Value[A], laz
 	}
 }
 
+func SimpleCase[A any](p bool, t lazy.Value[A]) func() (lazy.Value[A], lazy.Value[bool]) {
+	return func() (lazy.Value[A], lazy.Value[bool]) {
+		return t, lazy.Pure(p)
+	}
+}
+
 func Default[A any](t lazy.Value[A]) func() (lazy.Value[A], lazy.Value[bool]) {
-	return Case(lazy.Pure(true), t)
+	return SimpleCase(true, t)
 }
 
 func Switch[A any](cases ...func() (lazy.Value[A], lazy.Value[bool])) A {

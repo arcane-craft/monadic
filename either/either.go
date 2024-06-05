@@ -52,22 +52,19 @@ func FromRight[A, B any](b lazy.Value[B], e Either[A, B]) B {
 }
 
 func EitherOf[A, B, C any](left func(A) C, right func(B) C, e Either[A, B]) C {
-	if e.left != nil {
-		return left(*e.left)
-	}
-	return right(*e.right)
+	return Match(left, right, e)
 }
 
 func Mirror[A, B any](e Either[A, B]) Either[B, A] {
-	return EitherOf(Right[B, A], Left[A, B], e)
+	return Match(Right[B, A], Left[A, B], e)
 }
 
 func MapLeft[A, B, C any](m func(A) B, fa Either[A, C]) Either[B, C] {
-	return EitherOf(function.Compose(Left[C, B], m), Right[B, C], fa)
+	return Match(function.Compose(Left[C, B], m), Right[B, C], fa)
 }
 
 func MapRight[A, B, C any](m func(B) C, fa Either[A, B]) Either[A, C] {
-	return EitherOf(Left[C, A], function.Compose(Right[A, C], m), fa)
+	return Match(Left[C, A], function.Compose(Right[A, C], m), fa)
 }
 
 var _ = monad.ImplMonadDo[Either[any, any]]()
