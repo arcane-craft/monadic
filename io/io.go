@@ -40,4 +40,5 @@ func Perform[A any](m IO[A]) (A, error) {
 	return basics.Zero[A](), result.FromFail(nil, r)
 }
 
+var _ = lazy.ImplDelayable[IO[any]]()
 var _ = monad.ImplMonadDo[IO[any]]()

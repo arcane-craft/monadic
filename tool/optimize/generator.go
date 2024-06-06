@@ -38,6 +38,10 @@ func GenDoInit(pkgName, ty string) string {
 	return fmt.Sprintf("%sDoInit[%s]()", pkgName, ty)
 }
 
+func GenFuncLit(funcType string, body string) string {
+	return fmt.Sprintf("%s {\n%s\n}", funcType, body)
+}
+
 func GenBind(pkgName, monadStmt, block string) string {
 	if len(pkgName) > 0 {
 		pkgName += "."
@@ -142,9 +146,17 @@ func Generate(info *FileInfo, writer io.Writer) error {
 			}
 			lastStmts = contBlock
 		}
+		monadCPS := GenThen(monadPkgName, GenDoInit(monadPkgName, finalInstanceType), GenThenBlock(finalInstanceType, lastStmts))
+		if s.FuncType != nil {
+			ft, err := readExtent(file, *s.FuncType)
+			if err != nil {
+				return fmt.Errorf("readExtent() failed: %w", err)
+			}
+			monadCPS = GenFuncLit(ft, GenReturn(monadCPS))
+		}
 		blocks = append(blocks, &ReplaceBlock{
 			Old: s.Extent,
-			New: GenThen(monadPkgName, GenDoInit(monadPkgName, finalInstanceType), GenThenBlock(finalInstanceType, lastStmts)),
+			New: monadCPS,
 		})
 	}
 	slices.SortFunc(blocks, func(a, b *ReplaceBlock) int {

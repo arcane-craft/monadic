@@ -2,6 +2,7 @@ package either
 
 import (
 	"github.com/arcane-craft/monadic"
+	"github.com/arcane-craft/monadic/lazy"
 )
 
 func (Either[A, B]) Kind() aType[A] {
@@ -21,6 +22,10 @@ func (Either[A, B]) Abstract(o Either[A, B]) monadic.Data[any, aType[A]] {
 		return Right[A](any(*o.right))
 	}
 	return Left[any](*o.left)
+}
+
+func (e Either[A, B]) Delay() lazy.Value[Either[A, B]] {
+	panic(monadic.NotSupportForTest)
 }
 
 func (Either[A, B]) Map(m func(B) any, fa Either[A, B]) monadic.Data[any, aType[A]] {

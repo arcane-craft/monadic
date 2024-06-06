@@ -67,4 +67,5 @@ func MapRight[A, B, C any](m func(B) C, fa Either[A, B]) Either[A, C] {
 	return Match(Left[C, A], function.Compose(Right[A, C], m), fa)
 }
 
+var _ = lazy.ImplDelayable[Either[any, any]]()
 var _ = monad.ImplMonadDo[Either[any, any]]()

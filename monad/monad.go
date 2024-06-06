@@ -138,6 +138,51 @@ func Do[
 	return basics.Zero[M]().Do(proc)
 }
 
+func DoF[
+	M interface {
+		MonadDo[M, A, _T]
+		monadic.Data[A, _T]
+	},
+	P, A any,
+	_T any,
+](proc func(P) M) func(P) M {
+	return func(p P) M {
+		return basics.Zero[M]().Do(func() M {
+			return proc(p)
+		})
+	}
+}
+
+func DoF2[
+	M interface {
+		MonadDo[M, A, _T]
+		monadic.Data[A, _T]
+	},
+	P1, P2, A any,
+	_T any,
+](proc func(P1, P2) M) func(P1, P2) M {
+	return func(p1 P1, p2 P2) M {
+		return basics.Zero[M]().Do(func() M {
+			return proc(p1, p2)
+		})
+	}
+}
+
+func DoF3[
+	M interface {
+		MonadDo[M, A, _T]
+		monadic.Data[A, _T]
+	},
+	P1, P2, P3, A any,
+	_T any,
+](proc func(P1, P2, P3) M) func(P1, P2, P3) M {
+	return func(p1 P1, p2 P2, p3 P3) M {
+		return basics.Zero[M]().Do(func() M {
+			return proc(p1, p2, p3)
+		})
+	}
+}
+
 func LiftM[
 	MB interface {
 		Monad[MB, B, _T]

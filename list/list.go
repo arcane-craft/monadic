@@ -3,6 +3,7 @@ package list
 import (
 	"github.com/arcane-craft/monadic/algebra"
 	"github.com/arcane-craft/monadic/foldable"
+	"github.com/arcane-craft/monadic/lazy"
 	"github.com/arcane-craft/monadic/monad"
 )
 
@@ -46,6 +47,27 @@ func Tail[A any](l List[A]) List[A] {
 	return l[1:]
 }
 
+func Take[A any](n int, l List[A]) List[A] {
+	return l[:n]
+}
+
+func Drop[A any](n int, l List[A]) List[A] {
+	if n >= len(l) {
+		return Nil[A]()
+	}
+	return l[n:]
+}
+
+func ChunksOf[A any](n int, l List[A]) List[List[A]] {
+	ret := Nil[List[A]]()
+	for len(l) > 0 {
+		ret = Cons(Take(n, l), ret)
+		l = Drop(n, l)
+	}
+	return ret
+}
+
+var _ = lazy.ImplDelayable[List[any]]()
 var _ = monad.ImplMonad[List[any]]()
 var _ = algebra.ImplMonoid[List[any]]()
 var _ = foldable.ImplFoldable[List[any]]()

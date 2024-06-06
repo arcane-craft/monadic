@@ -16,6 +16,7 @@ const (
 	applicativePkgPath = "github.com/arcane-craft/monadic/applicative"
 	implMonadFun       = "ImplMonadDo"
 	monadDoFun         = "Do"
+	monadDoFFun        = "DoF"
 	monadDoExtractFun  = "X"
 )
 
@@ -176,8 +177,9 @@ type MonadStmt struct {
 
 type MonadDoSyntax struct {
 	Extent
-	Block   []*MonadStmt
-	RetType Extent
+	Block    []*MonadStmt
+	FuncType *Extent
+	RetType  Extent
 }
 
 type FileInfo struct {
@@ -192,7 +194,8 @@ type FileInfo struct {
 func (i *MonadDoSyntaxInspector) isMonadDoFun(funIdent *ast.Ident) bool {
 	if doFunObj := i.pkg.TypesInfo.ObjectOf(funIdent); doFunObj != nil {
 		if doFunPkg := doFunObj.Pkg(); doFunPkg != nil {
-			if doFunPkg.Path() == monadPkgPath && funIdent.Name == monadDoFun {
+			if doFunPkg.Path() == monadPkgPath &&
+				(funIdent.Name == monadDoFun || strings.HasPrefix(funIdent.Name, monadDoFFun)) {
 				return true
 			}
 		}
@@ -304,36 +307,47 @@ func (i *MonadDoSyntaxInspector) inspectDoBlock(block *ast.BlockStmt) []*MonadSt
 	return append(monadStmts, ms)
 }
 
-func (i *MonadDoSyntaxInspector) inspectDoFunCall(funExpr ast.Expr, args []ast.Expr) ([]*MonadStmt, Extent) {
+func (i *MonadDoSyntaxInspector) inspectDoFunCall(funExpr ast.Expr, args []ast.Expr) ([]*MonadStmt, *Extent, Extent) {
 	var (
-		stmts   []*MonadStmt
-		retType Extent
+		stmts    []*MonadStmt
+		funcType *Extent
+		retType  Extent
 	)
 	var isDoFunCall bool
+	var funcName string
 	switch fun := funExpr.(type) {
 	case *ast.Ident:
 		isDoFunCall = i.isMonadDoFun(fun)
+		funcName = fun.Name
 	case *ast.SelectorExpr:
 		isDoFunCall = i.isMonadDoFun(fun.Sel)
+		funcName = fun.Sel.Name
 	case *ast.IndexExpr:
-		s, r := i.inspectDoFunCall(fun.X, args)
+		s, f, r := i.inspectDoFunCall(fun.X, args)
 		stmts = append(stmts, s...)
+		funcType = f
 		retType = r
 	}
 	if isDoFunCall {
 		if len(args) == 1 {
 			funLit, ok := args[0].(*ast.FuncLit)
 			if ok {
+				if strings.HasPrefix(funcName, monadDoFFun) {
+					funcType = &Extent{
+						Start: i.pkg.Fset.Position(funLit.Type.Pos()),
+						End:   i.pkg.Fset.Position(funLit.Type.End()),
+					}
+				}
 				retType = Extent{
 					Start: i.pkg.Fset.Position(funLit.Type.Results.Pos()),
 					End:   i.pkg.Fset.Position(funLit.Type.Results.End()),
 				}
 				stmts = append(stmts, i.inspectDoBlock(funLit.Body)...)
-				return stmts, retType
+				return stmts, funcType, retType
 			}
 		}
 	}
-	return stmts, retType
+	return stmts, funcType, retType
 }
 
 func (i *MonadDoSyntaxInspector) InspectDoSyntax() []*FileInfo {
@@ -355,7 +369,7 @@ func (i *MonadDoSyntaxInspector) InspectDoSyntax() []*FileInfo {
 			}
 			return false
 		case *ast.CallExpr:
-			block, retType := i.inspectDoFunCall(node.Fun, node.Args)
+			block, funcType, retType := i.inspectDoFunCall(node.Fun, node.Args)
 			if len(block) > 0 {
 				fileName := i.pkg.Fset.Position(n.Pos()).Filename
 				file := fileMap[fileName]
@@ -373,8 +387,9 @@ func (i *MonadDoSyntaxInspector) InspectDoSyntax() []*FileInfo {
 						Start: i.pkg.Fset.Position(node.Pos()),
 						End:   i.pkg.Fset.Position(node.End()),
 					},
-					Block:   block,
-					RetType: retType,
+					Block:    block,
+					FuncType: funcType,
+					RetType:  retType,
 				})
 				return false
 			}

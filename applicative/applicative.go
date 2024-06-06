@@ -5,6 +5,7 @@ import (
 	"github.com/arcane-craft/monadic/basics"
 	"github.com/arcane-craft/monadic/function"
 	"github.com/arcane-craft/monadic/functor"
+	"github.com/arcane-craft/monadic/lazy"
 )
 
 type Applicative[
@@ -127,4 +128,17 @@ func LiftA2[
 	return basics.Zero[FC]().Concretize(basics.Zero[FA]().LiftA2(func(a A, b any) any {
 		return f(a, b.(B))
 	}, a, basics.Zero[FB]().Abstract(b)))
+}
+
+func When[
+	F interface {
+		Applicative[F, monadic.Unit, _T]
+		monadic.Data[monadic.Unit, _T]
+	},
+	_T any,
+](p bool, f lazy.Value[F]) F {
+	if p {
+		return f()
+	}
+	return Pure[F](monadic.Unit{})
 }

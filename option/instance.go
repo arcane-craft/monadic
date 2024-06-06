@@ -6,6 +6,7 @@ import (
 	"github.com/arcane-craft/monadic/basics"
 	"github.com/arcane-craft/monadic/foldable"
 	"github.com/arcane-craft/monadic/function"
+	"github.com/arcane-craft/monadic/lazy"
 )
 
 func (Option[A]) Kind() aType {
@@ -25,6 +26,10 @@ func (Option[A]) Abstract(o Option[A]) monadic.Data[any, aType] {
 		return Some(any(*o.v))
 	}
 	return None[any]()
+}
+
+func (o Option[A]) Delay() lazy.Value[Option[A]] {
+	panic(monadic.NotSupportForTest)
 }
 
 func (Option[A]) Map(m func(A) any, fa Option[A]) monadic.Data[any, aType] {

@@ -47,6 +47,7 @@ func FromOption[A any](a lazy.Value[A], o Option[A]) A {
 	return *o.v
 }
 
+var _ = lazy.ImplDelayable[Option[any]]()
 var _ = monad.ImplMonadDo[Option[any]]()
 var _ = algebra.ImplMonoid[Option[any]]()
 var _ = foldable.ImplFoldable[Option[any]]()

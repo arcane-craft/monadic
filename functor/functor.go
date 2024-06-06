@@ -72,5 +72,5 @@ func Ignore[
 	A any,
 	_T any,
 ](x FA) FT {
-	return Map[FT](function.Partial(basics.Const[monadic.Unit, A], monadic.Unit{}), x)
+	return Map[FT](function.Partial(basics.Const[A], monadic.Unit{}), x)
 }

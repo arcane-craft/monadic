@@ -9,6 +9,6 @@ func Id[A any](a A) A {
 	return a
 }
 
-func Const[A, B any](a A, _ B) A {
+func Const[B, A any](a A, _ B) A {
 	return a
 }

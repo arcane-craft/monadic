@@ -8,6 +8,7 @@ import (
 	"github.com/arcane-craft/monadic/basics"
 	"github.com/arcane-craft/monadic/either"
 	"github.com/arcane-craft/monadic/functor"
+	"github.com/arcane-craft/monadic/lazy"
 	"github.com/arcane-craft/monadic/monad"
 	"github.com/arcane-craft/monadic/result"
 )
@@ -27,6 +28,10 @@ func (IO[A]) Abstract(o IO[A]) monadic.Data[any, aType] {
 	return New(func() either.Either[error, any] {
 		return basics.Zero[either.Either[error, A]]().Abstract(o.v()).(either.Either[error, any])
 	})
+}
+
+func (m IO[A]) Delay() lazy.Value[IO[A]] {
+	panic(monadic.NotSupportForTest)
 }
 
 func (IO[A]) Map(m func(A) any, fa IO[A]) monadic.Data[any, aType] {
