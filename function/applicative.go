@@ -16,11 +16,11 @@ func FApply[R, A, B any](f func(R) func(A) B, a func(R) A) func(R) B {
 	}
 }
 
-func ApplyL[R, A, B any](a func(R) A, _ func(R) B) func(R) A {
+func FApplyL[R, A, B any](a func(R) A, _ func(R) B) func(R) A {
 	return LiftA(basics.Id, a)
 }
 
-func ApplyR[R, A, B any](_ func(R) A, b func(R) B) func(R) B {
+func FApplyR[R, A, B any](_ func(R) A, b func(R) B) func(R) B {
 	return LiftA(basics.Id, b)
 }
 

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path"
 	"slices"
 	"strings"
 )
@@ -64,6 +65,13 @@ func GenThenBlock(outType string, stmts []string) string {
 	return fmt.Sprintf("func () %s { %s }", outType, strings.Join(stmts, ";"))
 }
 
+func GenLazyValue(pkgName, retType, expr string) string {
+	if len(pkgName) > 0 {
+		pkgName += "."
+	}
+	return fmt.Sprintf("%sNew(func() %s {\nreturn %s\n})", pkgName, retType, expr)
+}
+
 type ReplaceBlock struct {
 	Old Extent
 	New string
@@ -93,72 +101,112 @@ func readExtentList(reader io.ReaderAt, extents []Extent) ([]string, error) {
 	return ret, nil
 }
 
-func Generate(info *FileInfo, writer io.Writer) error {
+func GenerateDelaySyntax(info *FileInfo[DelaySyntax], writer io.Writer) error {
+	return GenerateSyntax(info, writer, func(file *os.File, addImports map[string]string) ([]*ReplaceBlock, error) {
+		lazyPkgName, ok := info.Imports[lazyPkgPath]
+		if !ok {
+			lazyPkgName = GetRandPkgName(path.Base(lazyPkgPath), lazyPkgPath)
+			addImports[lazyPkgPath] = lazyPkgName
+		}
+		var blocks []*ReplaceBlock
+		for _, s := range info.Syntax {
+			exprType, adds := ResetTypeStrPkgName(s.ExprType, info.Imports, info.PkgPath)
+			if len(adds) > 0 {
+				for k, v := range adds {
+					addImports[k] = v
+				}
+			}
+			expr, err := readExtent(file, s.Expr)
+			if err != nil {
+				return nil, fmt.Errorf("readExtent() failed: %w", err)
+			}
+			blocks = append(blocks, &ReplaceBlock{
+				Old: s.Extent,
+				New: GenLazyValue(lazyPkgName, exprType, expr),
+			})
+		}
+		return blocks, nil
+	})
+}
+
+func GenerateMonadDoSyntax(info *FileInfo[MonadDoSyntax], writer io.Writer) error {
+	return GenerateSyntax(info, writer, func(file *os.File, addImports map[string]string) ([]*ReplaceBlock, error) {
+		monadPkgName, ok := info.Imports[monadPkgPath]
+		if !ok {
+			return nil, fmt.Errorf("expect import '%s' not found", monadPkgPath)
+		}
+		var blocks []*ReplaceBlock
+		for _, s := range info.Syntax {
+			slices.Reverse(s.Block)
+			var lastStmts []string
+			finalInstanceType, err := readExtent(file, s.RetType)
+			if err != nil {
+				return nil, fmt.Errorf("readExtent() failed: %w", err)
+			}
+			for _, b := range s.Block {
+				contBlock, err := readExtentList(file, b.PreStmts)
+				if err != nil {
+					return nil, fmt.Errorf("readExtentList() failed: %w", err)
+				}
+				if b.CallExpr != nil {
+					str, err := readExtent(file, *b.CallExpr)
+					if err != nil {
+						return nil, fmt.Errorf("readExtent() failed: %w", err)
+					}
+					var operation string
+					if b.ReturnVar != nil {
+						varType, adds := ResetTypeStrPkgName(b.ReturnVar.Type, info.Imports, info.PkgPath)
+						if len(adds) > 0 {
+							for k, v := range adds {
+								addImports[k] = v
+							}
+						}
+						if b.AnonymousCallExpr != nil {
+							call, err := readExtent(file, *b.AnonymousCallExpr)
+							if err != nil {
+								return nil, fmt.Errorf("readExtent() failed: %w", err)
+							}
+							lastStmts[0] = strings.Replace(lastStmts[0], call, b.ReturnVar.Name, 1)
+						}
+						operation = GenReturn(GenBind(monadPkgName, str, GenBindBlock(b.ReturnVar.Name, varType, finalInstanceType, lastStmts)))
+					} else {
+						operation = GenReturn(GenThen(monadPkgName, str, GenThenBlock(finalInstanceType, lastStmts)))
+					}
+					contBlock = append(contBlock, operation)
+				}
+				lastStmts = contBlock
+			}
+			monadCPS := GenThen(monadPkgName, GenDoInit(monadPkgName, finalInstanceType), GenThenBlock(finalInstanceType, lastStmts))
+			if s.FuncType != nil {
+				ft, err := readExtent(file, *s.FuncType)
+				if err != nil {
+					return nil, fmt.Errorf("readExtent() failed: %w", err)
+				}
+				monadCPS = GenFuncLit(ft, GenReturn(monadCPS))
+			}
+			blocks = append(blocks, &ReplaceBlock{
+				Old: s.Extent,
+				New: monadCPS,
+			})
+		}
+		return blocks, nil
+	})
+}
+
+func GenerateSyntax[Syntax any](info *FileInfo[Syntax], writer io.Writer,
+	proc func(file *os.File, addImports map[string]string) ([]*ReplaceBlock, error)) error {
 	file, err := os.Open(info.Path)
 	if err != nil {
 		return fmt.Errorf("os.Open() failed: %w", err)
 	}
 	defer file.Close()
 
-	monadPkgName, ok := info.Imports[monadPkgPath]
-	if !ok {
-		return fmt.Errorf("expect import '%s' not found", monadPkgPath)
-	}
-	var blocks []*ReplaceBlock
 	addImports := make(map[string]string)
-	for _, s := range info.Syntax {
-		slices.Reverse(s.Block)
-		var lastStmts []string
-		finalInstanceType, err := readExtent(file, s.RetType)
-		if err != nil {
-			return fmt.Errorf("readExtent() failed: %w", err)
-		}
-		for _, b := range s.Block {
-			contBlock, err := readExtentList(file, b.PreStmts)
-			if err != nil {
-				return fmt.Errorf("readExtentList() failed: %w", err)
-			}
-			if b.CallExpr != nil {
-				str, err := readExtent(file, *b.CallExpr)
-				if err != nil {
-					return fmt.Errorf("readExtent() failed: %w", err)
-				}
-				var operation string
-				if b.ReturnVar != nil {
-					varType, adds := ResetTypeStrPkgName(b.ReturnVar.Type, info.Imports, info.PkgPath)
-					if len(adds) > 0 {
-						for k, v := range adds {
-							addImports[k] = v
-						}
-					}
-					if b.AnonymousCallExpr != nil {
-						call, err := readExtent(file, *b.AnonymousCallExpr)
-						if err != nil {
-							return fmt.Errorf("readExtent() failed: %w", err)
-						}
-						lastStmts[0] = strings.Replace(lastStmts[0], call, b.ReturnVar.Name, 1)
-					}
-					operation = GenReturn(GenBind(monadPkgName, str, GenBindBlock(b.ReturnVar.Name, varType, finalInstanceType, lastStmts)))
-				} else {
-					operation = GenReturn(GenThen(monadPkgName, str, GenThenBlock(finalInstanceType, lastStmts)))
-				}
-				contBlock = append(contBlock, operation)
-			}
-			lastStmts = contBlock
-		}
-		monadCPS := GenThen(monadPkgName, GenDoInit(monadPkgName, finalInstanceType), GenThenBlock(finalInstanceType, lastStmts))
-		if s.FuncType != nil {
-			ft, err := readExtent(file, *s.FuncType)
-			if err != nil {
-				return fmt.Errorf("readExtent() failed: %w", err)
-			}
-			monadCPS = GenFuncLit(ft, GenReturn(monadCPS))
-		}
-		blocks = append(blocks, &ReplaceBlock{
-			Old: s.Extent,
-			New: monadCPS,
-		})
+	blocks, err := proc(file, addImports)
+	if err != nil {
+		return err
 	}
+
 	slices.SortFunc(blocks, func(a, b *ReplaceBlock) int {
 		return a.Old.Start.Offset - b.Old.Start.Offset
 	})

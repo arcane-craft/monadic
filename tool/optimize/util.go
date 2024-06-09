@@ -1,8 +1,9 @@
 package main
 
 import (
+	"crypto/sha256"
+	"encoding/base32"
 	"go/types"
-	"math/rand"
 	"path"
 	"regexp"
 	"strings"
@@ -59,7 +60,7 @@ func ResetTypeStrPkgName(str string, imports map[string]string, currentPkg strin
 		} else if len(pkgPath) > 0 {
 			pkgName, ok := imports[pkgPath]
 			if !ok {
-				pkgName = GetRandPkgName(path.Base(pkgPath))
+				pkgName = GetRandPkgName(path.Base(pkgPath), pkgPath)
 				if adds == nil {
 					adds = map[string]string{}
 				}
@@ -79,21 +80,12 @@ func ResetTypePkgName(ty types.Type, imports map[string]string, currentPkg strin
 	return
 }
 
-func GetRandString(letters []rune, n int) string {
-	b := make([]rune, n)
-	for i := range b {
-		b[i] = letters[rand.Intn(len(letters))]
-	}
-	return string(b)
+func GetRandPkgName(prefix string, nameHint string) string {
+	sum := sha256.Sum256([]byte(nameHint))
+	return prefix + "_" + strings.TrimRight(base32.HexEncoding.EncodeToString(sum[13:19]), "=")
 }
 
-func GetRandPkgName(prefix string) string {
-	letters := []rune("abcdefghijklmnopqrstuvwxyz1234567890")
-	return prefix + "_" + GetRandString(letters, 7)
-}
-
-func GetRandVarName() string {
-	startLetters := []rune("abcdefghijklmnopqrstuvwxyz")
-	otherLetters := []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890")
-	return GetRandString(startLetters, 1) + GetRandString(otherLetters, 7)
+func GetRandVarName(nameHint string) string {
+	sum := sha256.Sum256([]byte(nameHint))
+	return "var" + strings.TrimRight(base32.HexEncoding.EncodeToString(sum[13:19]), "=")
 }

@@ -2,8 +2,37 @@ package bools
 
 import "github.com/arcane-craft/monadic/lazy"
 
-func IfThenElse[A any](b bool, t lazy.Value[A], e lazy.Value[A]) A {
-	if b {
+type IfExpr[A any] struct {
+	p bool
+}
+
+type ThenExpr[A any] struct {
+	IfExpr[A]
+	t lazy.Value[A]
+}
+
+func If[A any](p bool) IfExpr[A] {
+	return IfExpr[A]{
+		p: p,
+	}
+}
+
+func (m IfExpr[A]) Then(t lazy.Value[A]) ThenExpr[A] {
+	return ThenExpr[A]{
+		IfExpr: m,
+		t:      t,
+	}
+}
+
+func (m ThenExpr[A]) Else(e lazy.Value[A]) A {
+	if m.p {
+		return m.t()
+	}
+	return e()
+}
+
+func IfThenElse[A any](p bool, t lazy.Value[A], e lazy.Value[A]) A {
+	if p {
 		return t()
 	}
 	return e()

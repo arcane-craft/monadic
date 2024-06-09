@@ -18,7 +18,184 @@ const (
 	monadDoFun         = "Do"
 	monadDoFFun        = "DoF"
 	monadDoExtractFun  = "X"
+	lazyPkgPath        = "github.com/arcane-craft/monadic/lazy"
+	implDelayableFun   = "ImplDelayable"
+	delayFun           = "Delay"
 )
+
+type DelayableTypeInspector struct {
+	pkg *packages.Package
+}
+
+func NewDelayableTypeInspector(pkg *packages.Package) *DelayableTypeInspector {
+	return &DelayableTypeInspector{pkg}
+}
+
+type DelayableInstanceType struct {
+	Name   string
+	ArgLen int
+}
+
+func (i *DelayableTypeInspector) inspectDelayableInstanceType(x ast.Expr) *DelayableInstanceType {
+	ident, ok := x.(*ast.Ident)
+	if ok {
+		if instance, ok := i.pkg.TypesInfo.Instances[ident]; ok {
+			return &DelayableInstanceType{
+				Name:   GetPkgPathFromType(instance.Type) + "." + ident.Name,
+				ArgLen: instance.TypeArgs.Len(),
+			}
+		}
+	}
+	return nil
+}
+
+func (i *DelayableTypeInspector) inspectDelayableImpl(implFun *ast.Ident, targetType ast.Expr) *DelayableInstanceType {
+	if selObj := i.pkg.TypesInfo.ObjectOf(implFun); selObj != nil {
+		if selPkg := selObj.Pkg(); selPkg != nil &&
+			selPkg.Path() == lazyPkgPath &&
+			implFun.Name == implDelayableFun {
+			switch index := targetType.(type) {
+			case *ast.IndexExpr:
+				return i.inspectDelayableInstanceType(index.X)
+			case *ast.IndexListExpr:
+				return i.inspectDelayableInstanceType(index.X)
+			}
+		}
+	}
+	return nil
+}
+
+func (i *DelayableTypeInspector) InspectDelayableTypes() []*DelayableInstanceType {
+	var ret []*DelayableInstanceType
+	ins := inspector.New(i.pkg.Syntax)
+	ins.Preorder([]ast.Node{
+		&ast.GenDecl{},
+	}, func(n ast.Node) {
+		decl := n.(*ast.GenDecl)
+		if decl.Tok.String() == ast.Var.String() {
+			for _, spec := range decl.Specs {
+				valueSpec, ok := spec.(*ast.ValueSpec)
+				if ok {
+					for _, value := range valueSpec.Values {
+						call, ok := value.(*ast.CallExpr)
+						if ok {
+							index, ok := call.Fun.(*ast.IndexExpr)
+							if ok {
+								switch fun := index.X.(type) {
+								case *ast.Ident:
+									inst := i.inspectDelayableImpl(fun, index.Index)
+									if inst != nil {
+										ret = append(ret, inst)
+									}
+								case *ast.SelectorExpr:
+									inst := i.inspectDelayableImpl(fun.Sel, index.Index)
+									if inst != nil {
+										ret = append(ret, inst)
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	})
+	return ret
+}
+
+type DelayableSyntaxInspector struct {
+	pkg           *packages.Package
+	instanceTypes map[string]*DelayableInstanceType
+}
+
+func NewDelayableSyntaxInspector(pkg *packages.Package, instances []*DelayableInstanceType) *DelayableSyntaxInspector {
+	instanceTypes := make(map[string]*DelayableInstanceType)
+	for _, inst := range instances {
+		instanceTypes[inst.Name] = inst
+	}
+	return &DelayableSyntaxInspector{
+		pkg:           pkg,
+		instanceTypes: instanceTypes,
+	}
+}
+
+type DelaySyntax struct {
+	Extent
+	Expr     Extent
+	ExprType string
+}
+
+func (i *DelayableSyntaxInspector) isDelayFun(funIdent *ast.Ident) bool {
+	if delayFunObj := i.pkg.TypesInfo.ObjectOf(funIdent); delayFunObj != nil {
+		if delayFunPkg := delayFunObj.Pkg(); delayFunPkg != nil {
+			if delayFunPkg.Path() == lazyPkgPath && funIdent.Name == delayFun {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func (i *DelayableSyntaxInspector) isDelayMethod(sel *ast.SelectorExpr) bool {
+	if sel.Sel.Name == delayFun {
+		instanceType := i.pkg.TypesInfo.TypeOf(sel.X).String()
+		if _, ok := i.instanceTypes[GetNameFromTypeStr(instanceType)]; ok {
+			return true
+		}
+	}
+	return false
+}
+
+func (i *DelayableSyntaxInspector) inspectDelayFnCall(funExpr ast.Expr, args []ast.Expr) (*Extent, string) {
+	var isDelayFunCall bool
+	var expr *Extent
+	var exprType string
+	switch fun := funExpr.(type) {
+	case *ast.Ident:
+		if len(args) == 1 {
+			isDelayFunCall = i.isDelayFun(fun)
+		}
+	case *ast.SelectorExpr:
+		if len(args) == 1 {
+			isDelayFunCall = i.isDelayFun(fun.Sel)
+		} else {
+			isDelayFunCall = i.isDelayMethod(fun)
+		}
+	case *ast.IndexExpr:
+		expr, exprType = i.inspectDelayFnCall(fun.X, args)
+	}
+	if isDelayFunCall {
+		if len(args) == 1 {
+			expr = &Extent{
+				Start: i.pkg.Fset.Position(args[0].Pos()),
+				End:   i.pkg.Fset.Position(args[0].End()),
+			}
+			exprType = i.pkg.TypesInfo.TypeOf(args[0]).String()
+		} else if sel, ok := funExpr.(*ast.SelectorExpr); ok {
+			expr = &Extent{
+				Start: i.pkg.Fset.Position(sel.X.Pos()),
+				End:   i.pkg.Fset.Position(sel.X.End()),
+			}
+			exprType = i.pkg.TypesInfo.TypeOf(sel.X).String()
+		}
+	}
+	return expr, exprType
+}
+
+func (i *DelayableSyntaxInspector) InspectSyntax(callExpr *ast.CallExpr) *DelaySyntax {
+	expr, exprType := i.inspectDelayFnCall(callExpr.Fun, callExpr.Args)
+	if expr != nil {
+		return &DelaySyntax{
+			Extent: Extent{
+				Start: i.pkg.Fset.Position(callExpr.Pos()),
+				End:   i.pkg.Fset.Position(callExpr.End()),
+			},
+			Expr:     *expr,
+			ExprType: exprType,
+		}
+	}
+	return nil
+}
 
 type MonadTypeInspector struct {
 	pkg *packages.Package
@@ -182,15 +359,6 @@ type MonadDoSyntax struct {
 	RetType  Extent
 }
 
-type FileInfo struct {
-	Path         string
-	BuildFlag    *Extent
-	PkgPath      string
-	Imports      map[string]string
-	ImportExtent Extent
-	Syntax       []*MonadDoSyntax
-}
-
 func (i *MonadDoSyntaxInspector) isMonadDoFun(funIdent *ast.Ident) bool {
 	if doFunObj := i.pkg.TypesInfo.ObjectOf(funIdent); doFunObj != nil {
 		if doFunPkg := doFunObj.Pkg(); doFunPkg != nil {
@@ -280,7 +448,7 @@ func (i *MonadDoSyntaxInspector) inspectDoBlock(block *ast.BlockStmt) []*MonadSt
 										End:   i.pkg.Fset.Position(node.End()),
 									}
 									ms.ReturnVar = &Variable{
-										Name: GetRandVarName(),
+										Name: GetRandVarName(i.pkg.Fset.Position(node.Pos()).String()),
 										Type: i.pkg.TypesInfo.TypeOf(node).String(),
 									}
 									monadStmts = append(monadStmts, ms)
@@ -350,8 +518,91 @@ func (i *MonadDoSyntaxInspector) inspectDoFunCall(funExpr ast.Expr, args []ast.E
 	return stmts, funcType, retType
 }
 
-func (i *MonadDoSyntaxInspector) InspectDoSyntax() []*FileInfo {
-	fileMap := make(map[string]*FileInfo)
+func (i *MonadDoSyntaxInspector) InspectSyntax(callExpr *ast.CallExpr) *MonadDoSyntax {
+	block, funcType, retType := i.inspectDoFunCall(callExpr.Fun, callExpr.Args)
+	if len(block) > 0 {
+		return &MonadDoSyntax{
+			Extent: Extent{
+				Start: i.pkg.Fset.Position(callExpr.Pos()),
+				End:   i.pkg.Fset.Position(callExpr.End()),
+			},
+			Block:    block,
+			FuncType: funcType,
+			RetType:  retType,
+		}
+	}
+	return nil
+}
+
+type SyntaxInspector[Syntax any] interface {
+	InspectSyntax(callExpr *ast.CallExpr) *Syntax
+}
+
+type PackageInspector[Syntax any] struct {
+	pkg           *packages.Package
+	imports       map[string]map[string]string
+	importExtents map[string]Extent
+	buildFlags    map[string]Extent
+
+	inspector SyntaxInspector[Syntax]
+}
+
+func NewPackageInspector[Syntax any](pkg *packages.Package, inpector SyntaxInspector[Syntax]) *PackageInspector[Syntax] {
+	imports := make(map[string]map[string]string)
+	importExtents := make(map[string]Extent)
+	buildFlags := make(map[string]Extent)
+	for _, file := range pkg.Syntax {
+		for _, cg := range file.Comments {
+			for _, c := range cg.List {
+				if strings.Contains(c.Text, "//go:build !monadic_production") || strings.Contains(c.Text, "//go:build monadic_production") {
+					fileName := pkg.Fset.Position(c.Pos()).Filename
+					buildFlags[fileName] = Extent{
+						Start: pkg.Fset.Position(c.Pos()),
+						End:   pkg.Fset.Position(c.End()),
+					}
+				}
+			}
+		}
+		specs := make(map[string]string)
+		pkgEndPos := pkg.Fset.Position(file.Name.End())
+		importExtents[pkgEndPos.Filename] = Extent{
+			Start: pkgEndPos,
+			End:   pkgEndPos,
+		}
+		for _, spec := range file.Imports {
+			importPath := strings.Trim(spec.Path.Value, "\"")
+			importName := path.Base(importPath)
+			if spec.Name != nil {
+				importName = spec.Name.Name
+				if importName == "." {
+					importName = ""
+				}
+			}
+			specs[importPath] = importName
+		}
+		fileName := pkg.Fset.Position(file.Pos()).Filename
+		imports[fileName] = specs
+	}
+	return &PackageInspector[Syntax]{
+		pkg:           pkg,
+		imports:       imports,
+		importExtents: importExtents,
+		buildFlags:    buildFlags,
+		inspector:     inpector,
+	}
+}
+
+type FileInfo[Syntax any] struct {
+	Path         string
+	BuildFlag    *Extent
+	PkgPath      string
+	Imports      map[string]string
+	ImportExtent Extent
+	Syntax       []*Syntax
+}
+
+func (i *PackageInspector[Syntax]) Inspect() []*FileInfo[Syntax] {
+	fileMap := make(map[string]*FileInfo[Syntax])
 	ins := inspector.New(i.pkg.Syntax)
 	ins.Nodes([]ast.Node{
 		&ast.GenDecl{},
@@ -369,12 +620,12 @@ func (i *MonadDoSyntaxInspector) InspectDoSyntax() []*FileInfo {
 			}
 			return false
 		case *ast.CallExpr:
-			block, funcType, retType := i.inspectDoFunCall(node.Fun, node.Args)
-			if len(block) > 0 {
+			syntax := i.inspector.InspectSyntax(node)
+			if syntax != nil {
 				fileName := i.pkg.Fset.Position(n.Pos()).Filename
 				file := fileMap[fileName]
 				if file == nil {
-					file = &FileInfo{
+					file = &FileInfo[Syntax]{
 						Path:         fileName,
 						PkgPath:      i.pkg.PkgPath,
 						Imports:      i.imports[fileName],
@@ -382,21 +633,13 @@ func (i *MonadDoSyntaxInspector) InspectDoSyntax() []*FileInfo {
 					}
 					fileMap[fileName] = file
 				}
-				file.Syntax = append(file.Syntax, &MonadDoSyntax{
-					Extent: Extent{
-						Start: i.pkg.Fset.Position(node.Pos()),
-						End:   i.pkg.Fset.Position(node.End()),
-					},
-					Block:    block,
-					FuncType: funcType,
-					RetType:  retType,
-				})
+				file.Syntax = append(file.Syntax, syntax)
 				return false
 			}
 		}
 		return true
 	})
-	var ret []*FileInfo
+	var ret []*FileInfo[Syntax]
 	for _, f := range fileMap {
 		if extent, ok := i.buildFlags[f.Path]; ok {
 			f.BuildFlag = &extent
