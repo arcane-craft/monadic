@@ -72,8 +72,8 @@ func ApplyL[
 	},
 	A, B any,
 	_T any,
-](fa FA, _ FB) FA {
-	return LiftA[FA](basics.Id, fa)
+](fa FA, fb FB) FA {
+	return LiftA2[FA](basics.Const, fa, fb)
 }
 
 // *>
@@ -88,8 +88,8 @@ func ApplyR[
 	},
 	A, B any,
 	_T any,
-](_ FA, fb FB) FB {
-	return LiftA[FB](basics.Id, fb)
+](fa FA, fb FB) FB {
+	return LiftA2[FB](function.Flip(basics.Const[A, B]), fa, fb)
 }
 
 func LiftA[

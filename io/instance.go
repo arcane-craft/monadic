@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/arcane-craft/monadic"
-	"github.com/arcane-craft/monadic/applicative"
 	"github.com/arcane-craft/monadic/basics"
 	"github.com/arcane-craft/monadic/either"
 	"github.com/arcane-craft/monadic/functor"
@@ -49,7 +48,15 @@ func (IO[A]) Pure(a A) IO[A] {
 func (IO[A]) LiftA2(f func(A, any) any, a IO[A], b monadic.Data[any, aType]) monadic.Data[any, aType] {
 	return New(func() either.Either[error, any] {
 		eb := b.(IO[any])
-		return applicative.LiftA2[either.Either[error, any]](f, a.v(), eb.v())
+		ra, err := Perform(a)
+		if err != nil {
+			return result.Fail[any](err)
+		}
+		rb, err := Perform(eb)
+		if err != nil {
+			return result.Fail[any](err)
+		}
+		return result.Ok(f(ra, rb))
 	})
 }
 

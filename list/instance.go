@@ -86,8 +86,8 @@ func (List[A]) Neutral() List[A] {
 
 func (List[A]) Foldr(f func(A, any) any, init any, input List[A]) any {
 	ret := init
-	for _, x := range input {
-		ret = f(x, ret)
+	for i := len(input) - 1; i >= 0; i-- {
+		ret = f(input[i], ret)
 	}
 	return ret
 }

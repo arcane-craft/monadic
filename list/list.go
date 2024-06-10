@@ -48,6 +48,9 @@ func Tail[A any](l List[A]) List[A] {
 }
 
 func Take[A any](n int, l List[A]) List[A] {
+	if n >= len(l) {
+		return l
+	}
 	return l[:n]
 }
 
