@@ -70,6 +70,16 @@ func ChunksOf[A any](n int, l List[A]) List[List[A]] {
 	return ret
 }
 
+func Filter[A any](p func(A) bool, l List[A]) List[A] {
+	var ret List[A]
+	for _, e := range l {
+		if p(e) {
+			ret = append(ret, e)
+		}
+	}
+	return ret
+}
+
 var _ = lazy.ImplDelayable[List[any]]()
 var _ = monad.ImplMonad[List[any]]()
 var _ = algebra.ImplMonoid[List[any]]()
