@@ -27,8 +27,6 @@ func FormatCode(ctx context.Context, filePath string) error {
 		}
 	}
 	cmd := exec.CommandContext(ctx, goplsPath, "format", "-w", filePath)
-	cmd.Env = append(cmd.Env, os.Environ()...)
-	cmd.Env = append(cmd.Env, "GOFLAGS=\"-tags=monadic_production\"")
 	err = cmd.Run()
 	if err != nil {
 		return fmt.Errorf("%s failed: %w", cmd.String(), err)

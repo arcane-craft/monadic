@@ -58,11 +58,11 @@ func GenThen(pkgName, monadStmt, block string) string {
 }
 
 func GenBindBlock(inName, inType, outType string, stmts []string) string {
-	return fmt.Sprintf("func (%s %s) %s { %s }", inName, inType, outType, strings.Join(stmts, ";"))
+	return fmt.Sprintf("func (%s %s) %s {\n%s\n}", inName, inType, outType, strings.Join(stmts, "\n"))
 }
 
 func GenThenBlock(outType string, stmts []string) string {
-	return fmt.Sprintf("func () %s { %s }", outType, strings.Join(stmts, ";"))
+	return fmt.Sprintf("func () %s {\n%s\n}", outType, strings.Join(stmts, "\n"))
 }
 
 func GenLazyValue(pkgName, retType, expr string) string {
