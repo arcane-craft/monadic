@@ -24,7 +24,7 @@ func Map[A, B, Ap, Bp any](m func(A, B) (Ap, Bp), fa Tuple[A, B]) Tuple[Ap, Bp] 
 
 type Tuple3[A, B, C any] func() (A, B, C)
 
-func New3[A, B, C any](a A, b B, c C) Tuple3[A, B, C] {
+func T3[A, B, C any](a A, b B, c C) Tuple3[A, B, C] {
 	return func() (A, B, C) {
 		return a, b, c
 	}
